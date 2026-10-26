@@ -40,7 +40,7 @@ npm start a local page                   →  funnel, filters, company cards, CS
 Mac and Linux:
 
 ```bash
-git clone https://github.com/<you>/leadnote.git && cd leadnote
+git clone https://github.com/Julianmakesmoney/leadnote.git && cd leadnote
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m playwright install chromium
@@ -50,7 +50,7 @@ claude
 Windows (PowerShell):
 
 ```powershell
-git clone https://github.com/<you>/leadnote.git; cd leadnote
+git clone https://github.com/Julianmakesmoney/leadnote.git; cd leadnote
 py -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\python -m playwright install chromium
@@ -59,7 +59,7 @@ claude
 
 `npm start` needs nothing installed: the page has no dependencies. To check the install, run the tests:
 `.venv/bin/pip install pytest` and `.venv/bin/python -m pytest -q` (Windows: `.venv\Scripts\...`).
-Or open Claude Code anywhere and say: "Clone github.com/<you>/leadnote and set it up for me."
+Or open Claude Code anywhere and say: "Clone github.com/Julianmakesmoney/leadnote and set it up for me."
 
 ## Run it
 
