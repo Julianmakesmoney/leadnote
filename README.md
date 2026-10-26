@@ -90,7 +90,8 @@ inside the city after filters and de-duplication, 217 readable websites. Of 15 c
 `/leadnote-qualify`, the sieve kept 8; the deep check marked 1 yes, 3 partly and 4 no (three of those were IT firms
 of 250+ people, a deal-breaker), with every evidence quote found on the stored pages. A second smoke test, "accountant" and
 "boekhouder" in Ghent (30 searches, stopped there on purpose with 14 left in the queue): 3,609 results, 534 unique
-listings, 210 companies, 128 readable websites, in 27 minutes, without a single block from Google.
+listings, 210 companies (70 of them without a website, let in by a filter bug that has since been fixed),
+128 readable websites, in 27 minutes, without a single block from Google.
 
 ## What to put in your criteria
 
