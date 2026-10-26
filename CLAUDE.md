@@ -21,7 +21,8 @@ If the user asks you to set it up ("clone … and set it up for me"):
   and restarted at any time. For a long run, start it in the background and tell the user how to follow it.
   Never run two `find` processes at once, and never lower the pace settings without the user asking.
 - `python run.py visit`: reads the companies' websites.
-- `/leadnote-qualify`: the two-step qualification. Always show the count and estimated cost and wait for an OK.
+- `/leadnote-qualify`: the two-step qualification. Always show the count and estimated cost and wait for an OK
+  (`--yes` skips the wait, for headless runs only when the user asks for it).
 - `/leadnote-brief`: cold-call briefings for fit = yes companies (cost first, `max_brief` cap).
 - `npm start`: the local page on http://localhost:4760 (zero dependencies). It calls `run.py json`.
 - `python run.py status` and `python run.py export` at any time.
@@ -33,7 +34,8 @@ If the user asks you to set it up ("clone … and set it up for me"):
 | `leadnote/maps.py` | Maps search: grid queue, list reading, splitting full cells, de-duplication, work-rest rhythm |
 | `leadnote/area.py` | Areas from OpenStreetMap Nominatim, the grid, point-in-area |
 | `leadnote/visit.py`, `leadnote/signals.py` | Website visits and the general signals (services, jobs, size, contact) |
-| `leadnote/qualify.py` | Batches for the sub-agents and `import-labels` with quote checking |
+| `leadnote/qualify.py` | Compact text batches for the sub-agents, no-AI prefilter, and `import-labels` with quote checking |
+| `leadnote/compact.py` | Picks the sentences the AI reads (menus and boilerplate out, `keywords` in); keeps qualifying cheap |
 | `leadnote/brief.py` | Briefing batches, import, markdown per company |
 | `.claude/commands/` | `/leadnote-setup`, `/leadnote-qualify`, `/leadnote-brief` |
 | `.claude/agents/` | `leadnote-sieve` (Haiku), `leadnote-qualifier` and `leadnote-briefer` (Sonnet) |
@@ -45,5 +47,6 @@ If the user asks you to set it up ("clone … and set it up for me"):
 - Keep only business data. Do not add e-mail harvesting, personal profiles, or review text.
 - Be honest about Google's terms: automated reading of Maps is not allowed by Google; the user runs this at their own
   responsibility. Do not add tricks to evade detection beyond the slow rhythm that is already there.
+- Never send raw site text to a sub-agent: batches go through `compact.py`, so every sentence stays literal page text.
 - Labels must quote the stored pages literally. `import-labels` checks every quote and marks the ones it cannot find.
 - Write plain English in code, docs and the page. Keep it simple and reliable over clever.

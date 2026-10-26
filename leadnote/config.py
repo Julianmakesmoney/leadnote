@@ -20,6 +20,8 @@ DEFAULTS = {
     "search_terms": [],
     "category_exclude": [],          # Maps categories that are certainly not a fit
     "name_keywords": [],             # a word in the name that rescues a company from category_exclude
+    "keywords": [],                  # word stems in the sites' language; pick the sentences the AI reads
+    "sieve_drop_words": [],          # a word in the name or Maps category that means a certain "no", without AI
     "keep_without_website": False,   # also keep companies that have no website on Maps
     "grid": {"cell_km": "auto", "max_depth": 3, "split_min_in_cell": 10},
     "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},

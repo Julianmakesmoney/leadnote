@@ -4,6 +4,11 @@
 
 *Every company on the map. A briefing for the ones worth calling.*
 
+![LEADNOTE's local page: the funnel, the companies in the note, and an open cold-call briefing](docs/screenshot.png)
+
+<sub>The local page after a small test run. Company names, addresses and phone numbers in this picture are replaced
+with made-up ones.</sub>
+
 Most lead lists are a phone book. LEADNOTE is a notebook: it reads every company in your niche on the map, and only
 the ones that truly fit get written in, each with the evidence, the opening line and a one-page call briefing.
 
@@ -32,13 +37,28 @@ npm start a local page                   →  funnel, filters, company cards, CS
 
 ## Setup
 
+Mac and Linux:
+
 ```bash
 git clone https://github.com/<you>/leadnote.git && cd leadnote
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m playwright install chromium
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m playwright install chromium
 claude
 ```
 
-On Windows use `.venv\Scripts\pip` and `.venv\Scripts\python`.
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/<you>/leadnote.git; cd leadnote
+py -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python -m playwright install chromium
+claude
+```
+
+`npm start` needs nothing installed: the page has no dependencies. To check the install, run the tests:
+`.venv/bin/pip install pytest` and `.venv/bin/python -m pytest -q` (Windows: `.venv\Scripts\...`).
 Or open Claude Code anywhere and say: "Clone github.com/<you>/leadnote and set it up for me."
 
 ## Run it
@@ -64,7 +84,9 @@ Or open Claude Code anywhere and say: "Clone github.com/<you>/leadnote and set i
    a table you can filter by fit, area, size and hiring, a card per company with the evidence and the opening
    line, and **Export CSV** for calling, LinkedIn or your CRM. `python run.py export` writes the same CSV.
 
-Use `.venv/bin/python` in place of `python` if you set up the virtual environment as above.
+Use `.venv/bin/python` (Windows: `.venv\Scripts\python`) in place of `python` if you set up the virtual environment
+as above. In Claude Code, add `--yes` to `/leadnote-qualify` or `/leadnote-brief` to skip the OK question (for
+headless runs such as `claude -p "/leadnote-qualify --yes"`); the estimate is still shown.
 
 ## An example run
 
@@ -115,12 +137,25 @@ See [`examples/criteria.md`](examples/criteria.md) for a complete one.
   takes an hour or two; a whole country can take days in the background. `python run.py plan` tells you before you
   start.
 - **Visiting** websites is fast: a few minutes per 200 companies.
-- **Qualifying** uses your Claude plan, no API key. Measured in the smoke test: a sieve batch (up to 40 companies,
-  Haiku) costs roughly 90,000 to 150,000 tokens, a deep batch of 8 companies (Sonnet) about 140,000. Most of that is
-  each sub-agent's fixed overhead, so bigger batches are cheaper per company. `/leadnote-qualify` shows the estimate
-  and waits for your OK, and `max_qualify` in `config/niche.json` (default 300) caps how many companies get checked.
-- **Briefings** cost about 90,000 tokens for a batch of up to 3 companies, including a little web research.
-  `/leadnote-brief` shows the estimate first; `max_brief` (default 25) caps it.
+- **Qualifying** uses your Claude plan, no API key. LEADNOTE keeps it cheap: the AI never reads raw site text.
+  `run.py` first labels what needs no AI (parked domains, unreachable sites, your `sieve_drop_words`), then cuts each
+  site into sentences, drops menus and repeated boilerplate, and keeps only the opening of the home and about page
+  plus the sentences that contain your `keywords`. Measured on the Utrecht test data (each figure is one sub-agent
+  run as Claude Code reports it):
+
+  | Step | Before | Now |
+  |---|---|---|
+  | Sieve (Haiku) | ~90,000 tokens for 15 companies (~6,000 each) | ~105,000 for 80 companies (~1,300 each) |
+  | Deep check (Sonnet) | ~140,000 for 8 companies (~17,500 each) | ~109,000 for 20 companies (~5,400 each) |
+  | Briefing (Sonnet + web) | ~90,000 for 1 company | ~95,000 for 4 companies (~24,000 each) |
+
+  About 80,000 of every sub-agent run is fixed overhead, so full batches are the cheap ones. On the same companies
+  the new deep check agreed with the old one on 7 of 8 labels, and every evidence quote was found on the stored
+  pages. `/leadnote-qualify` shows the estimate and waits for your OK, and `max_qualify` in `config/niche.json`
+  (default 300) caps how many companies get checked. 300 companies come to roughly 0.4M (sieve) + 0.9M (deep)
+  tokens.
+- **Briefings** do one round of web research per company (one news search, at most one extra page of their own
+  site). `/leadnote-brief` shows the estimate first; `max_brief` (default 25) caps it.
 
 ## Google and the pace (read this)
 
@@ -149,7 +184,8 @@ Europe.
   `name_keywords` overrules it). Companies without a website are left out unless you set `keep_without_website`.
 - **Resume.** Every search is a row in a local SQLite database (`data/leadnote.db`). Stop at any point; `find`
   continues with what's left, and the learned pace is kept in `data/pace.json`.
-- **Qualifying.** `run.py qualify-prep` writes batches to `data/qualify/`; Claude Code's sub-agents
+- **Qualifying.** `run.py qualify-prep` writes compact text batches to `data/qualify/` (criteria on top, then a
+  line or a short block per company with only the sentences that matter); Claude Code's sub-agents
   (`.claude/agents/leadnote-sieve.md` on Haiku, `.claude/agents/leadnote-qualifier.md` on Sonnet) write labels next to
   them; `run.py import-labels` stores them and checks every evidence quote against the stored pages. A quote it
   can't find is marked on the card. `/leadnote-brief` works the same way with `run.py brief-prep` and the
@@ -179,6 +215,8 @@ Everything lives in `config/niche.json`; see [`examples/niche.json`](examples/ni
 | `areas` | | OpenStreetMap names: `"Utrecht, Utrecht, Nederland"`, `"Belgium"`, `"Greater Manchester"` |
 | `search_terms` | | Maps categories and words, in the country's language |
 | `category_exclude`, `name_keywords` | `[]` | The category filter and its override |
+| `keywords` | `[]` | Word stems in the sites' language; they pick the sentences the AI reads. `/leadnote-setup` writes them, and `/leadnote-qualify` adds them when missing |
+| `sieve_drop_words` | `[]` | A word in a company name or Maps category that means a certain "no", dropped without AI |
 | `keep_without_website` | `false` | Keep companies that have no website |
 | `grid.cell_km` | `"auto"` | Cell size in km, or `auto` |
 | `grid.max_depth` | `3` | How often a busy cell may be split |

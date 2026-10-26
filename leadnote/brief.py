@@ -12,11 +12,14 @@ import os
 import re
 
 from . import db
-from .qualify import deep_record, quote_found
+from .compact import keywords
+from .qualify import CHARS_PER_TOKEN, _criteria_text, deep_block, quote_found
 
-OVERHEAD_PER_BATCH = 70000          # measured overhead of one sub-agent (see qualify.py)
-WEB_PER_COMPANY = 25000             # a few extra pages and a news search per company
-SECONDS_PER_COMPANY = 90
+OVERHEAD_PER_BATCH = 80000          # measured: one briefer sub-agent's fixed context (see qualify.py)
+WEB_PER_COMPANY = 2500              # one news search, at most one extra page, and the briefing it writes
+SECONDS_PER_COMPANY = 60
+BRIEF_BUDGET = 4500                 # characters of site sentences per company
+BATCH_SIZE = 4
 
 
 def candidates(conn, fits=("yes",), again=False):
@@ -28,37 +31,38 @@ def candidates(conn, fits=("yes",), again=False):
         " ORDER BY c.id", fits).fetchall()
 
 
-def prepare(conn, paths, niche, fits=("yes",), limit=None, batch_size=3, again=False):
+def brief_block(conn, c, kws):
+    lab = conn.execute("SELECT * FROM label WHERE company_id = ? AND stage = 'deep'", (c["id"],)).fetchone()
+    q = [f"qualified: {lab['fit']}, size {lab['size'] or 'unknown'}. {lab['reason'] or ''}",
+         f"evidence: \"{lab['evidence'] or ''}\" ({lab['evidence_url'] or 'maps'})",
+         f"opener: {lab['opener'] or ''}"]
+    block = deep_block(conn, c, kws, budget=BRIEF_BUDGET, with_sieve=False).split("\n")
+    return "\n".join(block[:3] + q + block[3:])
+
+
+def prepare(conn, paths, niche, fits=("yes",), limit=None, batch_size=BATCH_SIZE, again=False):
     folder = os.path.join(paths.qualify_dir, "brief")
     os.makedirs(folder, exist_ok=True)
-    for f in glob.glob(os.path.join(folder, "batch-*.json")):
+    for f in glob.glob(os.path.join(folder, "batch-*")):
         os.remove(f)
     rows = candidates(conn, fits, again)
     cap = int(limit or niche.get("max_brief") or 25)
     waiting = len(rows)
     rows = rows[:cap]
+    kws = keywords(niche, paths.criteria)
+    crit = _criteria_text(paths)
     files, chars = [], 0
     for i in range(0, len(rows), batch_size):
-        recs = []
-        for c in rows[i:i + batch_size]:
-            rec = deep_record(conn, c)
-            lab = conn.execute("SELECT * FROM label WHERE company_id = ? AND stage = 'deep'", (c["id"],)).fetchone()
-            rec["qualification"] = {k: lab[k] for k in ("fit", "reason", "evidence", "evidence_url", "opener", "size")}
-            rec["phone"] = c["phone"]
-            v = conn.execute("SELECT pages FROM visit WHERE company_id = ?", (c["id"],)).fetchone()
-            pages = json.loads(v["pages"] or "[]") if v else []
-            rec["pages"] = [{"kind": p["kind"], "url": p["url"], "title": p.get("title"),
-                             "headings": p.get("headings", [])[:25], "text": p.get("text", "")} for p in pages]
-            recs.append(rec)
-        path = os.path.join(folder, f"batch-{i // batch_size + 1:03d}.json")
-        payload = {"stage": "brief", "criteria": paths.criteria, "label_file": path.replace(".json", ".briefs.json"),
-                   "companies": recs}
-        text = json.dumps(payload, ensure_ascii=False, indent=1)
+        chunk = rows[i:i + batch_size]
+        path = os.path.join(folder, f"batch-{i // batch_size + 1:03d}.txt")
+        text = (f"LEADNOTE brief batch. {len(chunk)} companies.\nWrite the briefings to: {path[:-4]}.briefs.json\n\n"
+                f"## Criteria\n{crit}\n\n## Companies\n\n" + "\n\n".join(brief_block(conn, c, kws) for c in chunk) +
+                "\n")
         chars += len(text)
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
         files.append(path)
-    tokens = chars // 2 + len(files) * OVERHEAD_PER_BATCH + len(rows) * WEB_PER_COMPANY
+    tokens = int(len(files) * OVERHEAD_PER_BATCH + chars / CHARS_PER_TOKEN + len(rows) * WEB_PER_COMPANY)
     return {"stage": "brief", "fits": list(fits), "companies": len(rows), "waiting": waiting, "cap": cap,
             "batches": len(files), "files": files, "est_tokens": tokens,
             "est_minutes_parallel3": round(-(-len(files) // 3) * batch_size * SECONDS_PER_COMPANY / 60, 1)}

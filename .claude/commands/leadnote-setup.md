@@ -59,6 +59,12 @@ Then propose, without asking a separate question for each:
   wrong trade), in the country's language. 5 to 15 items.
 - `name_keywords`: word stems that, in a company name, show it *is* in the niche even when its Maps category is in
   the exclude list (e.g. "accountan", "boekhoud" for accountants). 3 to 8 items.
+- `keywords`: 20 to 40 word stems **in the language(s) of the companies' websites** that a fitting company would use
+  for what it does, for whom, and for the deal-breakers (e.g. "beheer", "servicedesk", "ontzorg", "werkplek",
+  "backup", "mkb", "zorg", "onderwijs" for IT service providers in the Netherlands). LEADNOTE uses them to pick the
+  sentences of each site that the AI reads, which keeps qualifying cheap. Stems, lowercase, no sentences.
+- `sieve_drop_words` (optional, usually empty): words that in a company name or Maps category mean a certain "no"
+  (e.g. "reparatie" when phone repair shops are a deal-breaker). They are dropped without AI. Only sure ones.
 - `keep_without_website`: true only if the user calls or visits companies that have no website.
 Show these in one short message and ask "OK, or change something?".
 
@@ -75,6 +81,8 @@ Show these in one short message and ask "OK, or change something?".
   "search_terms": ["..."],
   "category_exclude": ["..."],
   "name_keywords": ["..."],
+  "keywords": ["..."],
+  "sieve_drop_words": [],
   "keep_without_website": false,
   "grid": {"cell_km": "auto", "max_depth": 3, "split_min_in_cell": 10},
   "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},

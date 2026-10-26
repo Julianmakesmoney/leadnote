@@ -6,52 +6,55 @@ argument-hint: "[--limit N] [--yes]"
 # LEADNOTE qualify
 
 You qualify the companies that `python run.py find` and `python run.py visit` collected. You never search or crawl
-here: you read what is stored, judge it against the user's criteria, and write the labels back through
-`run.py import-labels`. Use the `.venv` Python if the project has one (`.venv/bin/python`, on Windows
-`.venv\Scripts\python`), else `python3`. Talk to the user in their language; labels are written in English, the
-opening line in the language of the company's website unless `criteria.md` says otherwise.
+here: `run.py` prepares compact batches, sub-agents judge them, and `run.py import-labels` stores the labels. Use the
+`.venv` Python if the project has one (`.venv/bin/python`, on Windows `.venv\Scripts\python`), else `python3`.
+Talk to the user in their language. Keep your own turns short: do not open the batch files yourself, the
+sub-agents read them.
 
 ## 1. Check and estimate (always, before any work)
 
-1. Read `config/criteria.md` and `config/niche.json`. No criteria file: tell the user to run `/leadnote-setup` first
-   and stop.
-2. Run `python run.py status`. If nothing has been visited yet, say that `python run.py visit` comes first and stop.
-3. Run `python run.py qualify-prep --stage sieve` (add `--limit N` if the user gave one). It writes the batches and
-   prints JSON with `companies`, `batches`, `est_tokens`, `est_minutes_parallel4` and the batch `files`.
-   It already respects `max_qualify` from `niche.json`.
-4. Estimate the deep check yourself: about half the companies usually pass the sieve, and a deep batch of 8
-   companies costs about 140,000 tokens (measured). So deep tokens ≈ `companies × 0.5 / 8 × 140,000`.
-5. Tell the user, in at most four short lines: how many companies, the two estimates added up (round to the nearest
-   10k tokens), roughly how many minutes, and that this uses their Claude plan (no API key). If more companies are
-   waiting than `max_qualify` allows, say how many are left out and how to raise it.
-6. **Ask for a clear OK and wait.** Only skip this when the user passed `--yes`. If the number is 0, say so and stop.
+1. Check that `config/criteria.md` exists (in the folder `LEADNOTE_CONFIG` points to, if set). If not: tell the
+   user to run `/leadnote-setup` first and stop.
+2. Run `python run.py qualify-prep --stage sieve` (add `--limit N` if the user gave one). It labels what needs no
+   AI (parked domains, sites that could not be reached, `sieve_drop_words`), writes the batches and prints JSON with
+   `companies` (left for the sieve), `auto_pass`, `auto_drop`, `batches`, `est_tokens`, `est_minutes_parallel4`
+   and the batch `files`. It already respects `max_qualify`. If it says 0 companies and nothing was visited yet,
+   say that `python run.py visit` comes first and stop.
+   If it says `"keywords_missing": true`, first add `keywords` to `config/niche.json`: 20 to 40 lowercase word stems
+   in the language(s) of the companies' websites, for what a fitting company does, for whom, and the deal-breakers
+   (see `examples/niche.json`). They decide which sentences of each site the sub-agents read. Tell the user in one
+   line, then run `qualify-prep --stage sieve` again (it continues where it was).
+3. Estimate the deep check: about half the companies pass the sieve, and a deep batch of up to 20 companies costs
+   about 110,000 tokens (measured). So deep tokens ≈ `ceil(companies × 0.5 / 20) × 110,000`.
+4. Tell the user, in at most four short lines: how many companies, the two estimates added up (round to the nearest
+   10k tokens), roughly how many minutes, and that this uses their Claude plan (no API key).
+5. **Ask for a clear OK and wait.** Skip this only when the arguments contain `--yes`: then say the estimate in one
+   line and go on. If the number is 0, say so and stop.
 
 ## 2. Step 1: the sieve (cheap and fast)
 
 For each sieve batch file, spawn a `leadnote-sieve` sub-agent (Agent tool, `subagent_type: "leadnote-sieve"`), up to
-4 at a time in one message, foreground. Give each one only:
+4 at a time in one message, foreground, with only this prompt:
 
-> Batch: `<batch file path>`. Criteria: `<criteria path from the batch>`. Write the labels to the `label_file`
-> named in the batch.
+> Batch: `<batch file path>`
 
-If the `leadnote-sieve` type is not available in this session, use `general-purpose` with `model: "haiku"` and paste
-the instructions from `.claude/agents/leadnote-sieve.md` into the prompt.
+If that type is not available in this session, use `general-purpose` with `model: "haiku"` and put the
+instructions from `.claude/agents/leadnote-sieve.md` in the prompt.
 
-When a round of agents is back, run `python run.py import-labels <the .labels.json files>`. Read its notes. If a
-file is missing or broken, run that batch once more; if it fails again, tell the user which batch and continue.
+Then run `python run.py import-labels <the .labels.json files>`. If a file is missing or broken, run that batch once
+more; if it fails again, tell the user which batch and continue.
 
 ## 3. Step 2: the deep check (better model)
 
-1. Run `python run.py qualify-prep --stage deep`. It writes batches of 8 with the full page text for the companies
-   that passed the sieve. If its estimate is far above what you announced (more than 1.5×), tell the user and ask
-   again before continuing.
+1. Run `python run.py qualify-prep --stage deep`. It writes batches of up to 20 for the companies that passed. If
+   its estimate is more than 1.5× what you announced, tell the user and ask again (also with `--yes`).
 2. For each deep batch, spawn a `leadnote-qualifier` sub-agent (`subagent_type: "leadnote-qualifier"`), up to 4 at a
-   time, with the same three lines as above. Fallback: `general-purpose` with `model: "sonnet"` and the
-   instructions from `.claude/agents/leadnote-qualifier.md`.
-3. After each round, `python run.py import-labels <files>`. Notes such as "evidence quote not found on the stored
-   pages" mean the agent paraphrased; for those companies, open the batch file, find the real sentence, and fix the
-   quote in the labels file yourself, then import that file again. Do not invent a quote: if none supports the
-   label, set `fit` to `partly` or `no` and say why in `reason`.
+   time, with the same one-line prompt. Fallback: `general-purpose` with `model: "sonnet"` and the instructions from
+   `.claude/agents/leadnote-qualifier.md`.
+3. Then `python run.py import-labels <files>`. A note "evidence quote not found on the stored pages" means the agent
+   paraphrased: search the batch file for a few words of it (Grep, not a full read), put the exact sentence in the
+   labels file and import that file again. Never invent a quote: if none supports the label, set `fit` to `partly`
+   or `no` and say why in `reason`.
 
 ## 4. Report
 
@@ -65,4 +68,4 @@ Run `python run.py status`. Then tell the user, short:
 
 - Never ask the sub-agents to browse, search or fetch: they judge what is in the batch.
 - Never put e-mail addresses in labels or opening lines.
-- Never change `config/` here.
+- Never change `config/` here, except adding missing `keywords` as above.
