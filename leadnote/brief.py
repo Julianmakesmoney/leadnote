@@ -1,4 +1,4 @@
-"""Cold-call briefings for the best-fit prospects (/dragnet-brief).
+"""Cold-call briefings for the best-fit prospects (/leadnote-brief).
 
     prepare()        batches of fit=yes companies (not briefed yet) with everything stored about them
     import_briefs()  stores what the briefer wrote and renders one markdown briefing per company

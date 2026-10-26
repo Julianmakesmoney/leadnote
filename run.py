@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Dragnet: every company on the map. Only the ones worth calling.
+"""LEADNOTE: the Death Note for sales. Every company on the map; a briefing for the ones worth calling.
 
     python run.py plan                 preview the grid: areas, cells, searches, rough time (does not touch Google)
     python run.py find [--max N]       search Google Maps cell by cell; stop any time, run again to continue
     python run.py visit [--limit N]    read each company's own website
     python run.py status               the funnel so far
     python run.py export [--fit yes,partly] [--out prospects.csv]
-    python run.py qualify-prep --stage sieve|deep    batches for /dragnet-qualify
-    python run.py brief-prep [--fit yes]             batches for /dragnet-brief
+    python run.py qualify-prep --stage sieve|deep    batches for /leadnote-qualify
+    python run.py brief-prep [--fit yes]             batches for /leadnote-brief
     python run.py import-labels FILE...              store the labels or briefings Claude wrote
     python run.py json                 everything the local page shows (used by npm start)
 
-Options for every command: --config DIR, --data DIR (or DRAGNET_CONFIG / DRAGNET_DATA).
+Options for every command: --config DIR, --data DIR (or LEADNOTE_CONFIG / LEADNOTE_DATA).
 """
 
 import argparse
@@ -20,11 +20,11 @@ import math
 import os
 import sys
 
-from dragnet import config, db, report
+from leadnote import config, db, report
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="run.py", description="Dragnet: find and qualify B2B prospects from Google Maps.")
+    ap = argparse.ArgumentParser(prog="run.py", description="LEADNOTE: find and qualify B2B prospects from Google Maps.")
     ap.add_argument("--config", help="folder with niche.json and criteria.md (default: ./config)")
     ap.add_argument("--data", help="folder for the database and work files (default: ./data)")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -40,11 +40,11 @@ def main(argv=None):
     e = sub.add_parser("export", help="CSV for calling, LinkedIn or your CRM")
     e.add_argument("--fit", default="yes,partly", help="comma list of yes, partly, no, unlabeled, or 'all'")
     e.add_argument("--out", help="file to write (default: data/prospects.csv); '-' for stdout")
-    q = sub.add_parser("qualify-prep", help="write batches for /dragnet-qualify")
+    q = sub.add_parser("qualify-prep", help="write batches for /leadnote-qualify")
     q.add_argument("--stage", choices=["sieve", "deep"], required=True)
     q.add_argument("--batch", type=int, help="companies per batch (sieve 40, deep 8)")
     q.add_argument("--limit", type=int, help="at most this many companies")
-    b = sub.add_parser("brief-prep", help="write batches for /dragnet-brief (fit=yes by default)")
+    b = sub.add_parser("brief-prep", help="write batches for /leadnote-brief (fit=yes by default)")
     b.add_argument("--fit", default="yes", help="comma list: yes, partly")
     b.add_argument("--limit", type=int, help="at most this many (default: max_brief in niche.json, 25)")
     b.add_argument("--again", action="store_true", help="also companies that already have a briefing")
@@ -92,7 +92,7 @@ def main(argv=None):
         return
 
     if a.cmd == "import-labels":
-        from dragnet import brief, qualify
+        from leadnote import brief, qualify
         conn = db.connect(paths.db)
         total = 0
         for path in a.files:
@@ -107,7 +107,7 @@ def main(argv=None):
     niche = config.load_niche(paths)
 
     if a.cmd == "plan":
-        from dragnet import area, maps
+        from leadnote import area, maps
         pace = niche.get("pace") or {}
         block, rest = int(pace.get("block", 12)), float(pace.get("rest_minutes", 20))
         total = 0
@@ -127,20 +127,20 @@ def main(argv=None):
 
     conn = db.connect(paths.db)
     if a.cmd == "find":
-        from dragnet import maps
+        from leadnote import maps
         try:
             maps.find(conn, niche, paths, max_searches=a.max, visible=a.show_browser)
         except KeyboardInterrupt:
             print("\nstopped. Everything so far is saved; run find again to continue.")
     elif a.cmd == "visit":
-        from dragnet import visit
+        from leadnote import visit
         visit.visit_companies(conn, niche, limit=a.limit, again=a.again, use_browser=not a.no_browser)
     elif a.cmd == "qualify-prep":
-        from dragnet import qualify
+        from leadnote import qualify
         s = qualify.prepare(conn, paths, niche, a.stage, a.batch, a.limit)
         print(json.dumps(s, indent=1))
     elif a.cmd == "brief-prep":
-        from dragnet import brief
+        from leadnote import brief
         s = brief.prepare(conn, paths, niche, tuple(x.strip() for x in a.fit.split(",")), a.limit, again=a.again)
         print(json.dumps(s, indent=1))
 

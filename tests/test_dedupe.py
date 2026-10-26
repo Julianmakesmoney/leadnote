@@ -2,8 +2,8 @@
 
 import json
 
-from dragnet import db
-from dragnet.maps import merge_twins, process_cards
+from leadnote import db
+from leadnote.maps import merge_twins, process_cards
 
 AREA = {"query": "Test", "name": "Test", "bbox": [52.0, 52.2, 5.0, 5.3], "polygons": []}
 NICHE = {"country": "nl", "language": "nl", "category_exclude": ["Restaurant"], "name_keywords": [],
@@ -70,6 +70,16 @@ def test_gate_outside_area_category_and_no_website():
     gates = dict(conn.execute("SELECT name, gate FROM place").fetchall())
     assert gates == {"Far IT": "outside_area", "Pizza": "category_out", "No Site IT": "no_website", "Good IT": "pass"}
     assert [r[0] for r in conn.execute("SELECT name FROM company")] == ["Good IT"]
+
+
+def test_without_website_only_a_name_keyword_rescues():
+    conn = setup()
+    niche = dict(NICHE, name_keywords=["accountan"])
+    row = conn.execute("SELECT * FROM search WHERE id=1").fetchone()
+    process_cards(conn, niche, [AREA], row, [card("Smith & Co", "0xc", cat="Accountant"),
+                                             card("Accountancy Jansen", "0xd", cat="Accountant")])
+    gates = dict(conn.execute("SELECT name, gate FROM place").fetchall())
+    assert gates == {"Smith & Co": "no_website", "Accountancy Jansen": "pass"}
 
 
 def test_same_phone_same_spot_merges_two_websites():

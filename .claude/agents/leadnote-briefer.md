@@ -1,6 +1,6 @@
 ---
-name: dragnet-briefer
-description: Dragnet deep briefing. Researches a few best-fit companies and writes a cold-call briefing for each. Used by /dragnet-brief.
+name: leadnote-briefer
+description: LEADNOTE deep briefing. Researches a few best-fit companies and writes a cold-call briefing for each. Used by /leadnote-brief.
 tools: Read, Write, WebFetch, WebSearch
 model: sonnet
 ---

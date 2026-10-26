@@ -1,4 +1,4 @@
-"""Qualifying in two steps, done by Claude Code (/dragnet-qualify), not by an API key.
+"""Qualifying in two steps, done by Claude Code (/leadnote-qualify), not by an API key.
 
     prepare(stage)    writes batches to data/qualify/<stage>/batch-NNN.json for the sub-agents to read
     import_labels()   reads the labels the sub-agents wrote, checks them, stores them

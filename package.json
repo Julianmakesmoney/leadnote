@@ -1,8 +1,8 @@
 {
-  "name": "dragnet",
+  "name": "leadnote",
   "version": "0.1.0",
   "private": true,
-  "description": "Every company on the map. Only the ones worth calling. A local page for the prospects Dragnet found and qualified.",
+  "description": "The Death Note for sales. Every company on the map; a briefing for the ones worth calling. Local page for the prospects LEADNOTE found and qualified.",
   "type": "module",
   "scripts": {
     "start": "node app/server.mjs"

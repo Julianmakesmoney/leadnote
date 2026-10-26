@@ -1,9 +1,9 @@
 ---
-description: Qualify the companies Dragnet found against config/criteria.md. Shows the count and cost first; then a quick sieve and a deep check, with evidence and an opening line per company.
+description: Qualify the companies LEADNOTE found against config/criteria.md. Shows the count and cost first; then a quick sieve and a deep check, with evidence and an opening line per company.
 argument-hint: "[--limit N] [--yes]"
 ---
 
-# Dragnet qualify
+# LEADNOTE qualify
 
 You qualify the companies that `python run.py find` and `python run.py visit` collected. You never search or crawl
 here: you read what is stored, judge it against the user's criteria, and write the labels back through
@@ -13,7 +13,7 @@ opening line in the language of the company's website unless `criteria.md` says 
 
 ## 1. Check and estimate (always, before any work)
 
-1. Read `config/criteria.md` and `config/niche.json`. No criteria file: tell the user to run `/dragnet-setup` first
+1. Read `config/criteria.md` and `config/niche.json`. No criteria file: tell the user to run `/leadnote-setup` first
    and stop.
 2. Run `python run.py status`. If nothing has been visited yet, say that `python run.py visit` comes first and stop.
 3. Run `python run.py qualify-prep --stage sieve` (add `--limit N` if the user gave one). It writes the batches and
@@ -28,14 +28,14 @@ opening line in the language of the company's website unless `criteria.md` says 
 
 ## 2. Step 1: the sieve (cheap and fast)
 
-For each sieve batch file, spawn a `dragnet-sieve` sub-agent (Agent tool, `subagent_type: "dragnet-sieve"`), up to
+For each sieve batch file, spawn a `leadnote-sieve` sub-agent (Agent tool, `subagent_type: "leadnote-sieve"`), up to
 4 at a time in one message, foreground. Give each one only:
 
 > Batch: `<batch file path>`. Criteria: `<criteria path from the batch>`. Write the labels to the `label_file`
 > named in the batch.
 
-If the `dragnet-sieve` type is not available in this session, use `general-purpose` with `model: "haiku"` and paste
-the instructions from `.claude/agents/dragnet-sieve.md` into the prompt.
+If the `leadnote-sieve` type is not available in this session, use `general-purpose` with `model: "haiku"` and paste
+the instructions from `.claude/agents/leadnote-sieve.md` into the prompt.
 
 When a round of agents is back, run `python run.py import-labels <the .labels.json files>`. Read its notes. If a
 file is missing or broken, run that batch once more; if it fails again, tell the user which batch and continue.
@@ -45,9 +45,9 @@ file is missing or broken, run that batch once more; if it fails again, tell the
 1. Run `python run.py qualify-prep --stage deep`. It writes batches of 8 with the full page text for the companies
    that passed the sieve. If its estimate is far above what you announced (more than 1.5×), tell the user and ask
    again before continuing.
-2. For each deep batch, spawn a `dragnet-qualifier` sub-agent (`subagent_type: "dragnet-qualifier"`), up to 4 at a
+2. For each deep batch, spawn a `leadnote-qualifier` sub-agent (`subagent_type: "leadnote-qualifier"`), up to 4 at a
    time, with the same three lines as above. Fallback: `general-purpose` with `model: "sonnet"` and the
-   instructions from `.claude/agents/dragnet-qualifier.md`.
+   instructions from `.claude/agents/leadnote-qualifier.md`.
 3. After each round, `python run.py import-labels <files>`. Notes such as "evidence quote not found on the stored
    pages" mean the agent paraphrased; for those companies, open the batch file, find the real sentence, and fix the
    quote in the labels file yourself, then import that file again. Do not invent a quote: if none supports the

@@ -1,10 +1,10 @@
 """Where things live and what the niche looks like.
 
-config/niche.json   what to search and where (written by /dragnet-setup; example in examples/)
-config/criteria.md  who counts as a good prospect (read by /dragnet-qualify)
+config/niche.json   what to search and where (written by /leadnote-setup; example in examples/)
+config/criteria.md  who counts as a good prospect (read by /leadnote-qualify)
 data/               the database and work files (never committed)
 
-DRAGNET_CONFIG and DRAGNET_DATA (or --config / --data) point somewhere else, handy for several projects.
+LEADNOTE_CONFIG and LEADNOTE_DATA (or --config / --data) point somewhere else, handy for several projects.
 """
 
 import json
@@ -25,14 +25,14 @@ DEFAULTS = {
     "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},
     "visit": {"max_pages": 6, "threads": 6},
     "max_qualify": 300,
-    "max_brief": 25,                 # most cold-call briefings per run of /dragnet-brief (fit = yes only)
+    "max_brief": 25,                 # most cold-call briefings per run of /leadnote-brief (fit = yes only)
 }
 
 
 class Paths:
     def __init__(self, config_dir=None, data_dir=None):
-        self.config = os.path.abspath(config_dir or os.environ.get("DRAGNET_CONFIG") or os.path.join(ROOT, "config"))
-        self.data = os.path.abspath(data_dir or os.environ.get("DRAGNET_DATA") or os.path.join(ROOT, "data"))
+        self.config = os.path.abspath(config_dir or os.environ.get("LEADNOTE_CONFIG") or os.path.join(ROOT, "config"))
+        self.data = os.path.abspath(data_dir or os.environ.get("LEADNOTE_DATA") or os.path.join(ROOT, "data"))
 
     @property
     def niche(self):
@@ -44,7 +44,7 @@ class Paths:
 
     @property
     def db(self):
-        return os.path.join(self.data, "dragnet.db")
+        return os.path.join(self.data, "leadnote.db")
 
     @property
     def areas_cache(self):
@@ -61,7 +61,7 @@ class Paths:
 
 def load_niche(paths):
     if not os.path.exists(paths.niche):
-        raise SystemExit(f"No {paths.niche} yet. Run /dragnet-setup in Claude Code, or copy examples/niche.json to "
+        raise SystemExit(f"No {paths.niche} yet. Run /leadnote-setup in Claude Code, or copy examples/niche.json to "
                          "config/niche.json and edit it.")
     with open(paths.niche, encoding="utf-8") as f:
         user = json.load(f)

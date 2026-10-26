@@ -3,16 +3,16 @@ description: Write a cold-call briefing for each best-fit prospect (fit = yes). 
 argument-hint: "[--limit N] [--include-partly] [--yes]"
 ---
 
-# Dragnet brief
+# LEADNOTE brief
 
-For the companies `/dragnet-qualify` marked **fit = yes**, a sub-agent does a short deep research and writes a
+For the companies `/leadnote-qualify` marked **fit = yes**, a sub-agent does a short deep research and writes a
 cold-call briefing: who they are and why now, 3 talking points with evidence, the opener, 2 likely objections with
 answers, and what to ask. "Partly" fits keep their short qualification, unless the user passes `--include-partly`.
 Use the `.venv` Python if there is one. Talk in the user's language.
 
 ## 1. Estimate and ask (always)
 
-1. Read `config/criteria.md`. Run `python run.py status`. No "yes" companies yet: say `/dragnet-qualify` comes first
+1. Read `config/criteria.md`. Run `python run.py status`. No "yes" companies yet: say `/leadnote-qualify` comes first
    and stop.
 2. Run `python run.py brief-prep` (add `--fit yes,partly` for `--include-partly`, `--limit N` if given). It writes
    batches of 3 companies and prints JSON: `companies`, `waiting`, `cap` (from `max_brief` in `niche.json`, default
@@ -23,14 +23,14 @@ Use the `.venv` Python if there is one. Talk in the user's language.
 
 ## 2. Write the briefings
 
-For each batch file, spawn a `dragnet-briefer` sub-agent (`subagent_type: "dragnet-briefer"`), up to 3 at a time in
+For each batch file, spawn a `leadnote-briefer` sub-agent (`subagent_type: "leadnote-briefer"`), up to 3 at a time in
 one message, foreground, with only:
 
 > Batch: `<batch file>`. Criteria: `<criteria path from the batch>`. Write the briefings to the `label_file` named
 > in the batch.
 
 Fallback when that type is not available: `general-purpose` with `model: "sonnet"` and the instructions from
-`.claude/agents/dragnet-briefer.md`.
+`.claude/agents/leadnote-briefer.md`.
 
 After each round: `python run.py import-labels <the .briefs.json files>`. It stores each briefing, writes
 `data/briefings/<id>-<name>.md`, and notes evidence it could not find on the stored pages (fine when the briefer

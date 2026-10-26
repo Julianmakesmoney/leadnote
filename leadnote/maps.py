@@ -5,7 +5,7 @@ companies. A list that comes back full (Maps shows no more than ~120) in a busy 
 cells one zoom level deeper, so dense city centres are not cut off. Every search is stored, so a run can stop at any
 moment (Ctrl+C, a crash, a block) and continue where it left off.
 
-Google's terms of service do not allow automated reading of Maps. Dragnet keeps a slow work-rest rhythm, reads only
+Google's terms of service do not allow automated reading of Maps. LEADNOTE keeps a slow work-rest rhythm, reads only
 business listings, and never opens review pages or collects e-mail addresses. Use it at your own responsibility.
 """
 
@@ -554,8 +554,9 @@ def _gate(p, niche, area_list):
     if not p["website"]:
         if p["sponsored"]:
             return "sponsored_unknown"            # its card links to the ad; the listing page has the real site
-        if niche.get("keep_without_website") or has_keyword(f"{p['name']} {p['category'] or ''}",
-                                                            niche.get("name_keywords", [])):
+        # Without a website only a niche word in the NAME counts: the category alone ('Accountant') would let
+        # every listing of the niche through (smoke test Gent: 70 accountants without a site).
+        if niche.get("keep_without_website") or has_keyword(p["name"], niche.get("name_keywords", [])):
             return "pass"
         return "no_website"
     return "pass"

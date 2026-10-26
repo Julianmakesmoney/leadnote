@@ -1,11 +1,11 @@
 ---
-description: Set up Dragnet for your niche. A short interview, one question at a time; writes config/niche.json and config/criteria.md.
+description: Set up LEADNOTE for your niche. A short interview, one question at a time; writes config/niche.json and config/criteria.md.
 argument-hint: "[optional: what you sell and where, in one line]"
 ---
 
-# Dragnet setup
+# LEADNOTE setup
 
-You are setting up Dragnet for this user. Dragnet finds every company of one kind in an area on Google Maps, reads
+You are setting up LEADNOTE for this user. LEADNOTE finds every company of one kind in an area on Google Maps, reads
 their websites, and then qualifies them against the user's criteria. Your job here: interview the user, then write
 two files. Nothing is searched yet.
 
@@ -52,7 +52,7 @@ two files. Nothing is searched yet.
    line each on why, mark the 2 or 3 you would start with, and let the user pick. Fewer terms = faster; each term
    adds a full pass over the grid. Recommend 2 to 4.
 6. **Size of the run.** How many companies to qualify at most (`max_qualify`, default 300). Mention that the
-   qualifying uses their Claude plan and that `/dragnet-qualify` shows the cost before it starts.
+   qualifying uses their Claude plan and that `/leadnote-qualify` shows the cost before it starts.
 
 Then propose, without asking a separate question for each:
 - `category_exclude`: Google Maps categories that are certainly not a fit in this niche (shops, restaurants, the
@@ -109,7 +109,7 @@ of the company's website)>
    the number of cells, searches and a rough time. It does not touch Google.
 2. Tell the user in 3 short lines: how many searches and roughly how long; that `find` keeps a slow work-rest
    rhythm and can be stopped with Ctrl+C and restarted any time; and the next steps:
-   `python run.py find`, then `python run.py visit`, then `/dragnet-qualify`, optionally `/dragnet-brief` for the
+   `python run.py find`, then `python run.py visit`, then `/leadnote-qualify`, optionally `/leadnote-brief` for the
    best fits, and `npm start` to watch.
 3. Mention once, plainly: Google's terms do not allow automated reading of Maps; the user runs it at their own
-   responsibility, at a calm pace, and Dragnet keeps only business data (no e-mail addresses).
+   responsibility, at a calm pace, and LEADNOTE keeps only business data (no e-mail addresses).

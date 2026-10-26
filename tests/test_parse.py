@@ -1,7 +1,7 @@
 """Reading Google Maps list cards and links. Card texts follow the real layout; names and numbers are made up."""
 
-from dragnet.maps import category_out, has_keyword, looks_like_rating, parse_card_text, parse_href, search_url
-from dragnet.keys import domain_of, normalise_phone, real_website
+from leadnote.maps import category_out, has_keyword, looks_like_rating, parse_card_text, parse_href, search_url
+from leadnote.keys import domain_of, normalise_phone, real_website
 
 HREF = ("https://www.google.com/maps/place/Example+IT/data=!4m7!3m6!1s0x47c6659d7f4ed723:0x78bfcf870294c262"
         "!8m2!3d52.0692675!4d5.0786642!16s%2Fg%2F11bbwpdhv4!19sChIJI9dOf51lxkcRYsKUAofPv3g?authuser=0&hl=nl")

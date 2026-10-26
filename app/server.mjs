@@ -1,4 +1,4 @@
-// Dragnet's local page. Zero dependencies: Node 20+ only.
+// LEADNOTE's local page. Zero dependencies: Node 20+ only.
 // It asks `python run.py json` for the data (the database is SQLite, which Node 20 cannot read on its own),
 // caches the answer for a few seconds, and serves the page in app/public.
 import http from "node:http";
@@ -15,7 +15,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
   ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".json": "application/json" };
 
 function python() {
-  if (process.env.DRAGNET_PYTHON) return process.env.DRAGNET_PYTHON;
+  if (process.env.LEADNOTE_PYTHON) return process.env.LEADNOTE_PYTHON;
   for (const p of [".venv/bin/python", ".venv/Scripts/python.exe", "venv/bin/python", "venv/Scripts/python.exe"]) {
     if (fs.existsSync(path.join(ROOT, p))) return path.join(ROOT, p);
   }
@@ -55,4 +55,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, "127.0.0.1", () => console.log(`Dragnet on http://localhost:${PORT}`));
+server.listen(PORT, "127.0.0.1", () => console.log(`LEADNOTE on http://localhost:${PORT}`));

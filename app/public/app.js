@@ -1,11 +1,12 @@
-// Dragnet page: funnel, filters, table, company card, CSV of what you see.
+// LEADNOTE page: funnel, filters, table, company card, CSV of what you see.
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (n) => (n == null ? "–" : Number(n).toLocaleString("en-US"));
 
 let DATA = { funnel: null, rows: [] };
-const state = { q: "", fit: "fitting", area: "", size: "", jobs: false, sort: "fit", dir: 1, open: null };
-try { Object.assign(state, JSON.parse(localStorage.getItem("dragnet.filters") || "{}"), { open: null }); } catch {}
+const state = { q: "", fit: "yes", area: "", size: "", jobs: false, sort: "fit", dir: 1, open: null };
+try { Object.assign(state, JSON.parse(localStorage.getItem("leadnote.filters") || "{}"), { open: null }); } catch {}
+if (!["yes", "fitting", "partly", "no", "unlabeled", "all"].includes(state.fit)) state.fit = "yes";
 
 function sizeOf(r) {
   if (r.size && r.size !== "unknown") return r.size;
@@ -41,13 +42,12 @@ function filtered() {
 function renderFunnel() {
   const f = DATA.funnel;
   if (!f) { $("#funnel").innerHTML = ""; return; }
-  const fit = f.fit_yes + f.fit_partly;
   const steps = [
     { n: f.searches, l: "Searches", s: f.searches_left ? `${fmt(f.searches_left)} left in the queue` : "queue done" },
     { n: f.results, l: "Results", s: "list entries read on Maps" },
     { n: f.unique, l: "Unique", s: `${fmt(f.companies)} companies after filters` },
     { n: f.visited, l: "Visited", s: `${fmt(f.visited_ok)} sites readable` },
-    { n: fit, l: "Fit", s: `${fmt(f.fit_yes)} yes · ${fmt(f.fit_partly)} partly · ${fmt(f.fit_no + (f.sieved - f.sieve_pass))} no`, win: true },
+    { n: f.fit_yes, l: "In the note", s: `fit yes · ${fmt(f.fit_partly)} partly · ${fmt(f.fit_no + (f.sieved - f.sieve_pass))} no`, win: true },
   ];
   const max = Math.max(1, f.results);
   $("#funnel").innerHTML = steps.map((s) => `
@@ -72,17 +72,17 @@ function renderRows() {
   const empty = $("#empty");
   if (!DATA.rows.length) {
     empty.hidden = false;
-    empty.innerHTML = `Nothing yet. Run <code>python run.py find</code>, then <code>python run.py visit</code>, then <code>/dragnet-qualify</code> in Claude Code.`;
+    empty.innerHTML = `Nothing yet. Run <code>python run.py find</code>, then <code>python run.py visit</code>, then <code>/leadnote-qualify</code> in Claude Code.`;
   } else if (!rs.length) {
     empty.hidden = false;
-    empty.innerHTML = state.fit === "fitting" && !DATA.rows.some((r) => r.fit === "yes" || r.fit === "partly")
-      ? `No companies qualified yet. Run <code>/dragnet-qualify</code> in Claude Code, or pick <b>All</b> above.`
+    empty.innerHTML = ["yes", "fitting"].includes(state.fit) && !DATA.rows.some((r) => r.fit === "yes" || r.fit === "partly")
+      ? `The note is still empty. Run <code>/leadnote-qualify</code> in Claude Code, or pick <b>All</b> above.`
       : "No companies match these filters.";
   } else empty.hidden = true;
   $("#rows").innerHTML = rs.slice(0, 2000).map((r) => `
     <tr data-id="${r.id}">
       <td>${r.fit ? `<span class="badge ${r.fit}">${r.fit}</span>` : `<span class="badge">not checked</span>`}</td>
-      <td><div class="name">${esc(r.name)}${r.brief ? ' <span class="tag">briefing</span>' : ""}</div><div class="sub">${esc(r.reason || r.domain || "")}</div></td>
+      <td><div class="name">${esc(r.name)}${r.brief ? ' <span class="tag">page</span>' : ""}</div><div class="sub">${esc(r.reason || r.domain || "")}</div></td>
       <td class="hide-s">${esc(r.category || "")}</td>
       <td class="hide-m">${esc(r.area || "")}</td>
       <td class="num">${r.staff ? fmt(r.staff) : esc(sizeOf(r) === "unknown" ? "–" : sizeOf(r))}</td>
@@ -98,7 +98,7 @@ function briefHtml(r) {
   const obj = (b.objections || []).map((o) => `<li><b>${esc(o.objection)}</b><div>${esc(o.answer)}</div></li>`).join("");
   const qs = (b.questions || []).map((q) => `<li>${esc(q)}</li>`).join("");
   const dm = (b.decision_makers || []).map((d) => `<li>${esc(d.name)}, ${esc(d.role)}</li>`).join("");
-  return `<div class="block brief"><h3>Cold-call briefing</h3>
+  return `<div class="block brief"><h3>The page: cold-call briefing</h3>
     <div class="whynow">${esc(b.who_why_now || "")}</div>
     ${pts ? `<h4>Talking points</h4><ol>${pts}</ol>` : ""}
     ${obj ? `<h4>Likely objections</h4><ul>${obj}</ul>` : ""}
@@ -153,12 +153,12 @@ function exportCsv() {
   const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `dragnet-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `leadnote-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-function save() { try { localStorage.setItem("dragnet.filters", JSON.stringify({ ...state, open: null })); } catch {} }
+function save() { try { localStorage.setItem("leadnote.filters", JSON.stringify({ ...state, open: null })); } catch {} }
 
 async function load() {
   try {

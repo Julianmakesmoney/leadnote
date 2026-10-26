@@ -1,12 +1,14 @@
 :root {
-  --bg: #0a0b0d;
-  --surface: #111317;
-  --raise: #171a1f;
-  --line: #22262d;
-  --line-soft: #1a1d23;
-  --text: #eceef1;
-  --muted: #8b929d;
-  --faint: #5c636e;
+  /* a black notebook: near-black paper, warm ink, thin rules */
+  --bg: #09090a;
+  --surface: #0f0f10;
+  --raise: #161617;
+  --line: #262524;
+  --line-soft: #1c1b1a;
+  --rule: rgba(233, 228, 218, .035);
+  --text: #ece7dd;
+  --muted: #9a958c;
+  --faint: #66625c;
   --accent: #3ddc97;
   --accent-ink: #062b1b;
   --partly: #f2b84b;
@@ -19,6 +21,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {
+  background-image: repeating-linear-gradient(180deg, transparent 0 31px, var(--rule) 31px 32px);
   font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -30,13 +33,14 @@ button, input, select { font: inherit; color: inherit; }
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; gap: 20px;
   padding: 14px 28px;
-  background: rgba(10, 11, 13, .82);
+  background: rgba(9, 9, 10, .86);
   backdrop-filter: saturate(140%) blur(14px);
   -webkit-backdrop-filter: saturate(140%) blur(14px);
   border-bottom: 1px solid var(--line-soft);
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -.01em; font-size: 16px; }
-.brand svg { width: 22px; height: 22px; fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; }
+.brand { display: flex; align-items: center; }
+.wordmark { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-size: 17px; font-weight: 600;
+  letter-spacing: .32em; padding-bottom: 2px; border-bottom: 1px solid var(--text); }
 .niche { color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .niche b { color: var(--text); font-weight: 560; }
 .live { display: flex; align-items: center; gap: 8px; color: var(--faint); font-size: 12px; }
