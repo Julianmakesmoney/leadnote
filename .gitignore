@@ -1,0 +1,21 @@
+# Your data and your niche: never committed
+data/
+*.db
+*.db-wal
+*.db-shm
+config/*
+!config/README.md
+
+# Python / Node
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json

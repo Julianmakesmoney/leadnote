@@ -1,0 +1,16 @@
+{
+  "name": "IT managed services, Utrecht",
+  "country": "nl",
+  "language": "nl",
+  "areas": ["Utrecht, Utrecht, Nederland"],
+  "search_terms": ["IT managed service provider", "IT-bedrijf", "Computerondersteuning en -services"],
+  "category_exclude": ["Computerwinkel", "Elektronicawinkel", "Telefoonwinkel", "Mobiele-telefoonwinkel",
+                       "Computerreparatie", "Webdesigner", "Internetmarketingbureau", "Uitzendbureau",
+                       "Reclamebureau", "Softwarebedrijf"],
+  "name_keywords": ["ict", "managed", "cloud", "netwerk", "systeembeheer"],
+  "keep_without_website": false,
+  "grid": {"cell_km": "auto", "max_depth": 3, "split_min_in_cell": 10},
+  "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},
+  "visit": {"max_pages": 6, "threads": 6},
+  "max_qualify": 300
+}

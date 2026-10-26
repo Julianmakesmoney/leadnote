@@ -1,0 +1,12 @@
+{
+  "name": "dragnet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Every company on the map. Only the ones worth calling. A local page for the prospects Dragnet found and qualified.",
+  "type": "module",
+  "scripts": {
+    "start": "node app/server.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}

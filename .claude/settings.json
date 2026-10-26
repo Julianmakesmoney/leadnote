@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python run.py:*)",
+      "Bash(python3 run.py:*)",
+      "Bash(.venv/bin/python run.py:*)",
+      "Bash(.venv\\Scripts\\python run.py:*)",
+      "Read(data/qualify/**)",
+      "Write(data/qualify/**)",
+      "Edit(data/qualify/**)"
+    ]
+  }
+}
