@@ -7,7 +7,8 @@
     python run.py status               the funnel so far
     python run.py export [--fit yes,partly] [--out prospects.csv]
     python run.py qualify-prep --stage sieve|deep    batches for /dragnet-qualify
-    python run.py import-labels FILE...              store the labels Claude wrote
+    python run.py brief-prep [--fit yes]             batches for /dragnet-brief
+    python run.py import-labels FILE...              store the labels or briefings Claude wrote
     python run.py json                 everything the local page shows (used by npm start)
 
 Options for every command: --config DIR, --data DIR (or DRAGNET_CONFIG / DRAGNET_DATA).
@@ -43,7 +44,11 @@ def main(argv=None):
     q.add_argument("--stage", choices=["sieve", "deep"], required=True)
     q.add_argument("--batch", type=int, help="companies per batch (sieve 40, deep 8)")
     q.add_argument("--limit", type=int, help="at most this many companies")
-    i = sub.add_parser("import-labels", help="store labels written by Claude")
+    b = sub.add_parser("brief-prep", help="write batches for /dragnet-brief (fit=yes by default)")
+    b.add_argument("--fit", default="yes", help="comma list: yes, partly")
+    b.add_argument("--limit", type=int, help="at most this many (default: max_brief in niche.json, 25)")
+    b.add_argument("--again", action="store_true", help="also companies that already have a briefing")
+    i = sub.add_parser("import-labels", help="store labels or briefings written by Claude")
     i.add_argument("files", nargs="+")
     sub.add_parser("json", help="data for the local page")
     a = ap.parse_args(argv)
@@ -74,24 +79,29 @@ def main(argv=None):
     if a.cmd == "export":
         conn = db.connect(paths.db)
         fits = None if a.fit == "all" else set(x.strip() for x in a.fit.split(","))
-        text = report.to_csv(report.rows(conn), fits)
+        rs = report.rows(conn)
+        text = report.to_csv(rs, fits)
+        n = sum(1 for r in rs if not fits or (r["fit"] or "unlabeled") in fits)
         if a.out == "-":
             sys.stdout.write(text)
             return
         out = a.out or os.path.join(paths.data, "prospects.csv")
         with open(out, "w", encoding="utf-8-sig", newline="") as fh:
             fh.write(text)
-        print(f"{text.count(chr(10)) - 1} companies -> {out}")
+        print(f"{n} companies -> {out}")
         return
 
     if a.cmd == "import-labels":
-        from dragnet import qualify
+        from dragnet import brief, qualify
         conn = db.connect(paths.db)
         total = 0
         for path in a.files:
-            n, _ = qualify.import_labels(conn, path)
+            if path.endswith(".briefs.json"):
+                n, _ = brief.import_briefs(conn, paths, path)
+            else:
+                n, _ = qualify.import_labels(conn, path)
             total += n
-        print(f"{total} labels stored. " + report.status_text(report.funnel(conn)).splitlines()[-1])
+        print(f"{total} stored. " + report.status_text(report.funnel(conn)).splitlines()[-1])
         return
 
     niche = config.load_niche(paths)
@@ -128,7 +138,11 @@ def main(argv=None):
     elif a.cmd == "qualify-prep":
         from dragnet import qualify
         s = qualify.prepare(conn, paths, niche, a.stage, a.batch, a.limit)
-        print(json.dumps({k: v for k, v in s.items()}, indent=1))
+        print(json.dumps(s, indent=1))
+    elif a.cmd == "brief-prep":
+        from dragnet import brief
+        s = brief.prepare(conn, paths, niche, tuple(x.strip() for x in a.fit.split(",")), a.limit, again=a.again)
+        print(json.dumps(s, indent=1))
 
 
 if __name__ == "__main__":

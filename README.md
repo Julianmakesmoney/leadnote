@@ -14,6 +14,7 @@ It only finds and qualifies. It does not send e-mail, it does not call, and it n
 find      Google Maps, cell by cell      →  every listing in the area, deduplicated
 visit     each company's own website     →  what they do, jobs, size, contact page
 qualify   Claude Code, two steps         →  fit yes / partly / no, a quote as evidence, one opening line
+brief     Claude Code, best fits only    →  a cold-call briefing per company
 npm start a local page                   →  funnel, filters, company cards, CSV export
 ```
 
@@ -49,7 +50,12 @@ Or open Claude Code anywhere and say: "Clone github.com/<you>/dragnet and set it
    OK. Then a quick sieve on a small model drops what clearly doesn't fit, and a deeper check on a better model
    labels the rest: **fit** (yes, partly, no), the **reason**, a **verbatim quote** from their site as evidence, and
    **one opening line** built on the most specific true detail it found.
-5. **`npm start`** and open http://localhost:4760. A funnel on top (searches → results → unique → visited → fit),
+5. **`/dragnet-brief`** in Claude Code (optional). For every **fit = yes** company, a sub-agent does a short deep
+   research (their own site and recent news) and writes a **cold-call briefing**: who they are and why now, 3
+   talking points with evidence, the opener, 2 likely objections with answers, and what to ask. It shows the cost
+   first; `max_brief` (default 25) caps it. Briefings land in `data/briefings/<id>-<name>.md`, on the company card
+   and in the CSV. Partly-fits keep their short qualification.
+6. **`npm start`** and open http://localhost:4760. A funnel on top (searches → results → unique → visited → fit),
    a table you can filter by fit, area, size and hiring, a card per company with the evidence and the opening
    line, and **Export CSV** for calling, LinkedIn or your CRM. `python run.py export` writes the same CSV.
 
@@ -57,7 +63,27 @@ Use `.venv/bin/python` in place of `python` if you set up the virtual environmen
 
 ## An example run
 
-{{EXAMPLE}}
+These are the real totals of the engine Dragnet was extracted from: Julian Verboom's own prospecting engine,
+run for one niche (technical wholesalers in hydraulics, pneumatics and drive technology) across the Netherlands and
+Flanders.
+
+| Step | Count |
+|---|---|
+| Google Maps searches | 2,321 |
+| Results read from the lists | 171,558 |
+| Unique companies | 13,560 |
+| Screened by AI (the sieve) | 12,116 |
+| Deep-checked | 2,416 |
+| **Perfect fit** | **650** (plus 687 partial) |
+
+Every one of the 650 came with the reason, a quote from its own site, and an opening line. Those numbers are from
+that engine, not from a Dragnet run; Dragnet is the same method, made general for any niche and country.
+
+A small smoke test of Dragnet itself, "IT managed service provider" in the city of Utrecht with the test pace
+(14 searches, then 8 minutes rest): 19 searches in 17 minutes, 2,256 results, 502 unique listings, 228 companies
+inside the city after filters and de-duplication, 217 readable websites. Of 15 companies sent through
+`/dragnet-qualify`, the sieve kept 8; the deep check marked 1 yes, 3 partly and 4 no (three of those were IT firms
+of 250+ people, a deal-breaker), with every evidence quote found on the stored pages. {{GENT}}
 
 ## What to put in your criteria
 
@@ -81,10 +107,12 @@ See [`examples/criteria.md`](examples/criteria.md) for a complete one.
   takes an hour or two; a whole country can take days in the background. `python run.py plan` tells you before you
   start.
 - **Visiting** websites is fast: a few minutes per 200 companies.
-- **Qualifying** uses your Claude plan. The sieve reads about 1,000 tokens per company on a small model; the deep
-  check about 3,000 per company on a better one, only for what passed the sieve. `/dragnet-qualify` shows the
-  estimate and waits for your OK, and `max_qualify` in `config/niche.json` (default 300) caps how many companies
-  get checked per project.
+- **Qualifying** uses your Claude plan, no API key. Measured in the smoke test: a sieve batch (up to 40 companies,
+  Haiku) costs roughly 90,000 to 150,000 tokens, a deep batch of 8 companies (Sonnet) about 140,000. Most of that is
+  each sub-agent's fixed overhead, so bigger batches are cheaper per company. `/dragnet-qualify` shows the estimate
+  and waits for your OK, and `max_qualify` in `config/niche.json` (default 300) caps how many companies get checked.
+- **Briefings** cost about 90,000 tokens for a batch of up to 3 companies, including a little web research.
+  `/dragnet-brief` shows the estimate first; `max_brief` (default 25) caps it.
 
 ## Google and the pace (read this)
 
@@ -96,7 +124,8 @@ lost).
 
 Dragnet keeps **business data only**: company name, category, business address, business phone, website, rating
 and review count from the Maps listing, and text from the company's own website. It does not open review pages,
-does not store reviews or reviewer names, and **removes e-mail addresses** from everything it stores. What you then
+does not store reviews or reviewer names, and **removes e-mail addresses** from everything it stores. Briefings
+may name decision makers, but only with the name and role the company publishes on its own website. What you then
 do with the list (calling, messaging) is subject to the rules for B2B outreach where you are, such as the GDPR in
 Europe.
 
@@ -115,17 +144,18 @@ Europe.
 - **Qualifying.** `run.py qualify-prep` writes batches to `data/qualify/`; Claude Code's sub-agents
   (`.claude/agents/dragnet-sieve.md` on Haiku, `.claude/agents/dragnet-qualifier.md` on Sonnet) write labels next to
   them; `run.py import-labels` stores them and checks every evidence quote against the stored pages. A quote it
-  can't find is marked on the card.
+  can't find is marked on the card. `/dragnet-brief` works the same way with `run.py brief-prep` and the
+  `dragnet-briefer` sub-agent.
 - **The page** is a zero-dependency Node server that asks `run.py json` for the data.
 
 ## What's inside
 
 | Path | What |
 |---|---|
-| `run.py` | The command line: `plan`, `find`, `visit`, `status`, `export`, `qualify-prep`, `import-labels` |
+| `run.py` | The command line: `plan`, `find`, `visit`, `status`, `export`, `qualify-prep`, `brief-prep`, `import-labels` |
 | `dragnet/` | Maps search and grid, website visits and signals, qualifying, reports |
-| `.claude/commands/` | `/dragnet-setup` and `/dragnet-qualify` |
-| `.claude/agents/` | The sieve and the qualifier sub-agents |
+| `.claude/commands/` | `/dragnet-setup`, `/dragnet-qualify` and `/dragnet-brief` |
+| `.claude/agents/` | The sieve, qualifier and briefer sub-agents |
 | `app/` | The local page (Node 20, no dependencies) |
 | `examples/` | A complete `niche.json` and `criteria.md` |
 | `tests/` | Unit tests: `python -m pytest -q` |
@@ -146,6 +176,7 @@ Everything lives in `config/niche.json`; see [`examples/niche.json`](examples/ni
 | `grid.max_depth` | `3` | How often a busy cell may be split |
 | `pace.block`, `pace.rest_minutes` | `12`, `20` | Searches per work block, minutes of rest |
 | `max_qualify` | `300` | Most companies to qualify |
+| `max_brief` | `25` | Most cold-call briefings per `/dragnet-brief` |
 
 `DRAGNET_CONFIG` and `DRAGNET_DATA` (or `--config` and `--data`) let you keep several projects side by side.
 

@@ -47,6 +47,7 @@ def rows(conn):
         sig = json.loads(v["signals"] or "{}") if v else {}
         labels = {l["stage"]: dict(l) for l in conn.execute("SELECT * FROM label WHERE company_id = ?", (c["id"],))}
         deep, sieve = labels.get("deep"), labels.get("sieve")
+        br = conn.execute("SELECT markdown, path, data FROM briefing WHERE company_id = ?", (c["id"],)).fetchone()
         fit = deep["fit"] if deep else ("no" if sieve and sieve["fit"] == "drop" else None)
         jobs = sig.get("jobs") or {}
         staff = sig.get("staff") or {}
@@ -65,6 +66,8 @@ def rows(conn):
             "evidence": (deep or {}).get("evidence"), "evidence_url": (deep or {}).get("evidence_url"),
             "quote_found": (deep or {}).get("quote_found"), "opener": (deep or {}).get("opener"),
             "size": (deep or {}).get("size"),
+            "briefing": br["markdown"] if br else None, "briefing_file": br["path"] if br else None,
+            "brief": json.loads(br["data"]) if br else None,
         })
     out.sort(key=lambda r: (FIT_ORDER.get(r["fit"], 3), (r["name"] or "").lower()))
     return out
@@ -72,7 +75,7 @@ def rows(conn):
 
 CSV_FIELDS = ["fit", "name", "website", "phone", "area", "address", "category", "rating", "reviews", "size", "staff",
               "founded", "reason", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin",
-              "maps_url"]
+              "maps_url", "briefing_file", "briefing"]
 
 
 def to_csv(rs, fits=None):

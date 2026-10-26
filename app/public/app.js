@@ -82,7 +82,7 @@ function renderRows() {
   $("#rows").innerHTML = rs.slice(0, 2000).map((r) => `
     <tr data-id="${r.id}">
       <td>${r.fit ? `<span class="badge ${r.fit}">${r.fit}</span>` : `<span class="badge">not checked</span>`}</td>
-      <td><div class="name">${esc(r.name)}</div><div class="sub">${esc(r.reason || r.domain || "")}</div></td>
+      <td><div class="name">${esc(r.name)}${r.brief ? ' <span class="tag">briefing</span>' : ""}</div><div class="sub">${esc(r.reason || r.domain || "")}</div></td>
       <td class="hide-s">${esc(r.category || "")}</td>
       <td class="hide-m">${esc(r.area || "")}</td>
       <td class="num">${r.staff ? fmt(r.staff) : esc(sizeOf(r) === "unknown" ? "–" : sizeOf(r))}</td>
@@ -91,21 +91,39 @@ function renderRows() {
     </tr>`).join("");
 }
 
+function briefHtml(r) {
+  const b = r.brief;
+  if (!b) return "";
+  const pts = (b.talking_points || []).map((t) => `<li>${esc(t.point)}${t.evidence ? `<div class="src">“${esc(t.evidence)}”${t.url ? " · " + link(t.url, "source") : ""}</div>` : ""}</li>`).join("");
+  const obj = (b.objections || []).map((o) => `<li><b>${esc(o.objection)}</b><div>${esc(o.answer)}</div></li>`).join("");
+  const qs = (b.questions || []).map((q) => `<li>${esc(q)}</li>`).join("");
+  const dm = (b.decision_makers || []).map((d) => `<li>${esc(d.name)}, ${esc(d.role)}</li>`).join("");
+  return `<div class="block brief"><h3>Cold-call briefing</h3>
+    <div class="whynow">${esc(b.who_why_now || "")}</div>
+    ${pts ? `<h4>Talking points</h4><ol>${pts}</ol>` : ""}
+    ${obj ? `<h4>Likely objections</h4><ul>${obj}</ul>` : ""}
+    ${qs ? `<h4>Ask</h4><ul>${qs}</ul>` : ""}
+    ${dm ? `<h4>Decision makers on their site</h4><ul>${dm}</ul>` : ""}
+    ${r.briefing_file ? `<div class="src">${esc(r.briefing_file)}</div>` : ""}</div>`;
+}
+
 function link(url, label) { return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : ""; }
 
 function openCard(id) {
   const r = DATA.rows.find((x) => x.id === id);
   if (!r) return;
   state.open = id;
+  const opener = (r.brief && r.brief.opener) || r.opener;
   const verified = r.quote_found === 1 ? "" : r.quote_found === 0 ? ` · <span class="warn">quote not found on the stored pages</span>` : "";
   $("#cardbody").innerHTML = `
     ${r.fit ? `<span class="badge ${r.fit}">${r.fit}</span>` : `<span class="badge">not checked</span>`}
     <h2>${esc(r.name)}</h2>
     <div class="meta">${esc([r.category, r.address, r.area].filter(Boolean).join(" · "))}</div>
     <div class="links">${link(r.website, r.domain || "Website")}${link(r.maps_url, "Maps")}${link(r.contact_page, "Contact page")}${link(r.jobs_page, "Jobs")}${link(r.linkedin, "LinkedIn")}</div>
-    ${r.opener ? `<div class="block"><h3>Opening line</h3><div class="opener"><div id="opentext">${esc(r.opener)}</div><button id="copy">Copy</button></div></div>` : ""}
+    ${opener ? `<div class="block"><h3>Opening line</h3><div class="opener"><div id="opentext">${esc(opener)}</div><button id="copy">Copy</button></div></div>` : ""}
     ${r.reason ? `<div class="block"><h3>Why</h3><div>${esc(r.reason)}</div></div>` : ""}
     ${r.evidence ? `<div class="block"><h3>Evidence</h3><blockquote>“${esc(r.evidence)}”</blockquote><div class="src">${r.evidence_url ? link(r.evidence_url, r.evidence_url) : "Google Maps listing"}${verified}</div></div>` : ""}
+    ${briefHtml(r)}
     <div class="block"><h3>Signals</h3><dl>
       <dt>Size</dt><dd>${r.size && r.size !== "unknown" ? esc(r.size) + " people" : r.staff ? fmt(r.staff) + " people (site)" : "unknown"}${r.staff_quote ? `<div class="src">“${esc(r.staff_quote)}”</div>` : ""}</dd>
       <dt>Founded</dt><dd>${esc(r.founded ?? "unknown")}</dd>
@@ -118,7 +136,7 @@ function openCard(id) {
   $("#card").setAttribute("aria-hidden", "false");
   $("#scrim").classList.add("on");
   const copy = $("#copy");
-  if (copy) copy.onclick = () => navigator.clipboard.writeText(r.opener).then(() => { copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy"), 1400); });
+  if (copy) copy.onclick = () => navigator.clipboard.writeText(opener).then(() => { copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy"), 1400); });
 }
 function closeCard() {
   state.open = null;
@@ -128,7 +146,7 @@ function closeCard() {
 }
 
 const CSV = ["fit", "name", "website", "phone", "area", "address", "category", "rating", "reviews", "size", "staff", "founded",
-  "reason", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin", "maps_url"];
+  "reason", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin", "maps_url", "briefing_file", "briefing"];
 function exportCsv() {
   const cell = (v) => { const s = Array.isArray(v) ? v.join("; ") : String(v ?? ""); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const lines = [CSV.join(",")].concat(filtered().map((r) => CSV.map((k) => cell(k === "size" ? sizeOf(r) : r[k])).join(",")));

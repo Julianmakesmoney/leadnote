@@ -98,6 +98,14 @@ CREATE TABLE IF NOT EXISTS label (
     PRIMARY KEY (company_id, stage)
 );
 
+CREATE TABLE IF NOT EXISTS briefing (
+    company_id    INTEGER PRIMARY KEY REFERENCES company(id),
+    data          TEXT NOT NULL,          -- JSON as written by the briefer
+    markdown      TEXT NOT NULL,          -- the cold-call briefing, also saved as data/briefings/<id>-<name>.md
+    path          TEXT,
+    created_at    TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS place_company ON place(company_id);
 CREATE INDEX IF NOT EXISTS place_phone ON place(phone);
 CREATE INDEX IF NOT EXISTS search_status ON search(status, depth);

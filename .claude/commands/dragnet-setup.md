@@ -109,6 +109,7 @@ of the company's website)>
    the number of cells, searches and a rough time. It does not touch Google.
 2. Tell the user in 3 short lines: how many searches and roughly how long; that `find` keeps a slow work-rest
    rhythm and can be stopped with Ctrl+C and restarted any time; and the next steps:
-   `python run.py find`, then `python run.py visit`, then `/dragnet-qualify`, and `npm start` to watch.
+   `python run.py find`, then `python run.py visit`, then `/dragnet-qualify`, optionally `/dragnet-brief` for the
+   best fits, and `npm start` to watch.
 3. Mention once, plainly: Google's terms do not allow automated reading of Maps; the user runs it at their own
    responsibility, at a calm pace, and Dragnet keeps only business data (no e-mail addresses).

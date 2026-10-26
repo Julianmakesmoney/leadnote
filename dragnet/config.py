@@ -25,6 +25,7 @@ DEFAULTS = {
     "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},
     "visit": {"max_pages": 6, "threads": 6},
     "max_qualify": 300,
+    "max_brief": 25,                 # most cold-call briefings per run of /dragnet-brief (fit = yes only)
 }
 
 

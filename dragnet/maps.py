@@ -176,11 +176,14 @@ def has_keyword(text, keywords):
     return any(re.search(r"(?<![\w])" + re.escape(k.lower()), t) for k in keywords if k)
 
 
-def should_split(cell_km, depth, results, in_cell_count, median_last_km, min_in_cell, max_depth):
-    """Split when the list was full (Maps shows no more) and the cell itself is busy: enough results inside the
-    cell, and either half the list lies inside it or the last results are still close by. A full list made of
-    far-away companies (Maps tops up) is not a busy cell."""
+def should_split(cell_km, depth, results, in_cell_count, median_last_km, min_in_cell, max_depth, new_places=None):
+    """Split when the list was full (Maps shows no more), the search still found enough new places (otherwise the
+    smaller cells mostly repeat what is known), and the cell itself is busy: enough results inside the cell, and
+    either half the list lies inside it or the last results are still close by. A full list made of far-away
+    companies (Maps tops up) is not a busy cell."""
     if depth >= max_depth or results < FULL_FROM or in_cell_count < min_in_cell:
+        return False
+    if new_places is not None and new_places < min_in_cell:
         return False
     return in_cell_count >= results // 2 or (median_last_km is not None and median_last_km <= cell_km)
 
@@ -766,7 +769,7 @@ def find(conn, niche, paths, log=print, max_searches=None, visible=False):
                                                        res["new_places"], row["id"]))
             planned = 0
             if status == "ok" and should_split(row["cell_km"], row["depth"] or 0, len(cards), res["in_cell"],
-                                               res["median_last_km"], min_in_cell, max_depth):
+                                               res["median_last_km"], min_in_cell, max_depth, res["new_places"]):
                 planned = plan_children(conn, row)
             conn.commit()
             if status == "ok":

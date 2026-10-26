@@ -12,5 +12,6 @@
   "grid": {"cell_km": "auto", "max_depth": 3, "split_min_in_cell": 10},
   "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},
   "visit": {"max_pages": 6, "threads": 6},
-  "max_qualify": 300
+  "max_qualify": 300,
+  "max_brief": 25
 }

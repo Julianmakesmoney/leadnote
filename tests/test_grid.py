@@ -72,3 +72,5 @@ def test_split_only_full_and_busy_cells():
     assert not should_split(5, 3, FULL_FROM + 20, 80, 2.0, 10, 3)   # max depth
     assert not should_split(5, 0, FULL_FROM + 20, 5, 9.0, 10, 3)    # full of far-away results
     assert should_split(5, 0, 120, 30, 4.0, 10, 3)                  # last results still close by
+    assert not should_split(5, 0, 120, 80, 2.0, 10, 3, new_places=3)  # full, but hardly anything new
+    assert should_split(5, 0, 120, 80, 2.0, 10, 3, new_places=40)

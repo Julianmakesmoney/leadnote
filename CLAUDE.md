@@ -22,6 +22,7 @@ If the user asks you to set it up ("clone … and set it up for me"):
   Never run two `find` processes at once, and never lower the pace settings without the user asking.
 - `python run.py visit`: reads the companies' websites.
 - `/dragnet-qualify`: the two-step qualification. Always show the count and estimated cost and wait for an OK.
+- `/dragnet-brief`: cold-call briefings for fit = yes companies (cost first, `max_brief` cap).
 - `npm start`: the local page on http://localhost:4760 (zero dependencies). It calls `run.py json`.
 - `python run.py status` and `python run.py export` at any time.
 
@@ -33,8 +34,9 @@ If the user asks you to set it up ("clone … and set it up for me"):
 | `dragnet/area.py` | Areas from OpenStreetMap Nominatim, the grid, point-in-area |
 | `dragnet/visit.py`, `dragnet/signals.py` | Website visits and the general signals (services, jobs, size, contact) |
 | `dragnet/qualify.py` | Batches for the sub-agents and `import-labels` with quote checking |
-| `.claude/commands/` | `/dragnet-setup`, `/dragnet-qualify` |
-| `.claude/agents/` | `dragnet-sieve` (Haiku) and `dragnet-qualifier` (Sonnet) |
+| `dragnet/brief.py` | Briefing batches, import, markdown per company |
+| `.claude/commands/` | `/dragnet-setup`, `/dragnet-qualify`, `/dragnet-brief` |
+| `.claude/agents/` | `dragnet-sieve` (Haiku), `dragnet-qualifier` and `dragnet-briefer` (Sonnet) |
 | `config/` | The user's niche (not in git). Examples in `examples/` |
 | `data/` | The database and work files (not in git). `DRAGNET_DATA` points elsewhere |
 
