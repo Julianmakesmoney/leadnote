@@ -19,8 +19,9 @@ SIEVE_FIT = ("pass", "drop")
 DEEP_FIT = ("yes", "partly", "no")
 SIZES = ("1-9", "10-49", "50-249", "250+", "unknown")
 
-# Rough token estimate: ~4 characters per token, plus the instructions and criteria each sub-agent reads.
-OVERHEAD_PER_BATCH = 6000
+# Rough token estimate, measured in the test runs: each sub-agent costs ~70k tokens of fixed overhead (its own
+# instructions and tools, counted again on every turn), and the batch text is read about twice (~4 chars per token).
+OVERHEAD_PER_BATCH = 70000
 OUT_PER_COMPANY = {"sieve": 40, "deep": 220}
 SECONDS_PER_BATCH = {"sieve": 60, "deep": 240}
 
@@ -101,7 +102,7 @@ def prepare(conn, paths, niche, stage, batch_size=None, limit=None):
             f.write(text)
         files.append(path)
     crit = os.path.getsize(paths.criteria) if os.path.exists(paths.criteria) else 0
-    tokens_in = chars // 4 + len(files) * (OVERHEAD_PER_BATCH + crit // 4)
+    tokens_in = chars // 2 + len(files) * (OVERHEAD_PER_BATCH + crit // 4)
     tokens_out = len(rows) * OUT_PER_COMPANY[stage]
     return {"stage": stage, "companies": len(rows), "batches": len(files), "files": files,
             "est_tokens": tokens_in + tokens_out, "est_minutes_parallel4": round(

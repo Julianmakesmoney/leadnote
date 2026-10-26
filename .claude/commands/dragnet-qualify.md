@@ -19,8 +19,8 @@ opening line in the language of the company's website unless `criteria.md` says 
 3. Run `python run.py qualify-prep --stage sieve` (add `--limit N` if the user gave one). It writes the batches and
    prints JSON with `companies`, `batches`, `est_tokens`, `est_minutes_parallel4` and the batch `files`.
    It already respects `max_qualify` from `niche.json`.
-4. Estimate the deep check yourself: about half the companies usually pass the sieve; a deep batch of 8 companies is
-   about 25,000 tokens. So deep tokens ≈ `companies × 0.5 / 8 × 25,000`.
+4. Estimate the deep check yourself: about half the companies usually pass the sieve, and a deep batch of 8
+   companies costs about 140,000 tokens (measured). So deep tokens ≈ `companies × 0.5 / 8 × 140,000`.
 5. Tell the user, in at most four short lines: how many companies, the two estimates added up (round to the nearest
    10k tokens), roughly how many minutes, and that this uses their Claude plan (no API key). If more companies are
    waiting than `max_qualify` allows, say how many are left out and how to raise it.

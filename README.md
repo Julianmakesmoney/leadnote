@@ -1,0 +1,154 @@
+# Dragnet
+
+**Every company on the map. Only the ones worth calling.**
+
+Dragnet builds the most complete prospect list you can get for one B2B niche in one area, then tells you which of
+those companies are worth a call, why, and how to open the conversation. It sweeps Google Maps cell by cell (so a
+busy city centre doesn't get cut off at Maps' 120-result limit), drops the duplicates, reads each company's own
+website, and then Claude Code checks every company against your criteria with a quote as proof.
+
+It works for any niche in any country: IT service providers in Utrecht, accountants in Ghent, machine shops in Ohio.
+It only finds and qualifies. It does not send e-mail, it does not call, and it never collects e-mail addresses.
+
+```
+find      Google Maps, cell by cell      →  every listing in the area, deduplicated
+visit     each company's own website     →  what they do, jobs, size, contact page
+qualify   Claude Code, two steps         →  fit yes / partly / no, a quote as evidence, one opening line
+npm start a local page                   →  funnel, filters, company cards, CSV export
+```
+
+## What you need
+
+- [Claude Code](https://claude.com/claude-code). Your Claude plan covers the qualifying; no API key.
+- Python 3.10 or newer, for finding and visiting.
+- [Node.js](https://nodejs.org) 20 or newer, for the local page. Nothing to install beyond that.
+- Mac, Windows or Linux.
+
+## Setup
+
+```bash
+git clone https://github.com/<you>/dragnet.git && cd dragnet
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m playwright install chromium
+claude
+```
+
+On Windows use `.venv\Scripts\pip` and `.venv\Scripts\python`.
+Or open Claude Code anywhere and say: "Clone github.com/<you>/dragnet and set it up for me."
+
+## Run it
+
+1. **`/dragnet-setup`** in Claude Code. A short interview, one question at a time: what you sell, who your ideal
+   customer is, what's a deal-breaker, and where. Claude proposes Google Maps search terms in the language of that
+   country, you pick. It writes `config/niche.json` and `config/criteria.md`.
+2. **`python run.py find`** sweeps Google Maps. It shows live how many searches, results and unique companies it has.
+   It is slow on purpose (see *Google and the pace* below); stop it with Ctrl+C whenever you like and run it again
+   to continue where it left off. `python run.py plan` shows the size of the job first.
+3. **`python run.py visit`** reads each company's own website: what they sell or do, open jobs, size signals, the
+   contact page.
+4. **`/dragnet-qualify`** in Claude Code. It shows how many companies and the estimated tokens and waits for your
+   OK. Then a quick sieve on a small model drops what clearly doesn't fit, and a deeper check on a better model
+   labels the rest: **fit** (yes, partly, no), the **reason**, a **verbatim quote** from their site as evidence, and
+   **one opening line** built on the most specific true detail it found.
+5. **`npm start`** and open http://localhost:4760. A funnel on top (searches → results → unique → visited → fit),
+   a table you can filter by fit, area, size and hiring, a card per company with the evidence and the opening
+   line, and **Export CSV** for calling, LinkedIn or your CRM. `python run.py export` writes the same CSV.
+
+Use `.venv/bin/python` in place of `python` if you set up the virtual environment as above.
+
+## An example run
+
+{{EXAMPLE}}
+
+## What to put in your criteria
+
+`/dragnet-setup` writes `config/criteria.md` for you; edit it whenever you learn something. The qualifier is only
+as good as this page. Put in:
+
+- **What you sell**, in one or two lines.
+- **Fit: yes.** The kind of company, as things a website can show: what they do, for whom, size range.
+- **Fit: partly.** Close, with one doubt: too big, the matching service is a side line, unclear customers.
+- **Fit: no.** Your deal-breakers: freelancers, chains, consumer shops, the wrong trade.
+- **Signals that make it stronger.** Hiring, a service page for X, a webshop, a named sector, how long they've existed.
+- **Opening line.** What the first sentence should touch on, the tone, and the language.
+
+See [`examples/criteria.md`](examples/criteria.md) for a complete one.
+
+## Cost and time
+
+- **Finding** costs nothing but time. Google tends to block after a fixed number of searches in a row, so Dragnet
+  works in blocks (12 searches by default) with a rest in between (20 minutes by default), and adjusts the block
+  size itself when it meets a block. That makes it about 30 searches an hour. A city with one or two search terms
+  takes an hour or two; a whole country can take days in the background. `python run.py plan` tells you before you
+  start.
+- **Visiting** websites is fast: a few minutes per 200 companies.
+- **Qualifying** uses your Claude plan. The sieve reads about 1,000 tokens per company on a small model; the deep
+  check about 3,000 per company on a better one, only for what passed the sieve. `/dragnet-qualify` shows the
+  estimate and waits for your OK, and `max_qualify` in `config/niche.json` (default 300) caps how many companies
+  get checked per project.
+
+## Google and the pace (read this)
+
+Google's Terms of Service do not allow automated reading of Google Maps. Dragnet does it anyway, the way a person
+would at a calm pace: one browser, one search at a time, pauses between searches, long rests between blocks, and a
+full stop when Google pushes back. **Use it at your own responsibility.** Keep the default pace, don't run several
+at once, and expect that Google may still block you for a while (Dragnet pauses and continues later; nothing is
+lost).
+
+Dragnet keeps **business data only**: company name, category, business address, business phone, website, rating
+and review count from the Maps listing, and text from the company's own website. It does not open review pages,
+does not store reviews or reviewer names, and **removes e-mail addresses** from everything it stores. What you then
+do with the list (calling, messaging) is subject to the rules for B2B outreach where you are, such as the GDPR in
+Europe.
+
+## How it works
+
+- **The grid.** Each area you name is looked up on OpenStreetMap (free, no key), which gives its outline. Dragnet
+  covers the outline with square cells (a third of the area's longest side, between 3 and 20 km) and searches every
+  term in every cell. When a list comes back full and the cell itself is busy, the cell is split into four smaller
+  cells one zoom level deeper, up to `max_depth` times. Companies outside the outline are dropped.
+- **Duplicates.** One listing can show up in many searches: it is stored once (Maps id). Listings that share a
+  website become one company, and listings with the same phone number within 50 metres are merged.
+- **The filter.** `category_exclude` drops Maps categories that are certainly wrong (a word in the company name from
+  `name_keywords` overrules it). Companies without a website are left out unless you set `keep_without_website`.
+- **Resume.** Every search is a row in a local SQLite database (`data/dragnet.db`). Stop at any point; `find`
+  continues with what's left, and the learned pace is kept in `data/pace.json`.
+- **Qualifying.** `run.py qualify-prep` writes batches to `data/qualify/`; Claude Code's sub-agents
+  (`.claude/agents/dragnet-sieve.md` on Haiku, `.claude/agents/dragnet-qualifier.md` on Sonnet) write labels next to
+  them; `run.py import-labels` stores them and checks every evidence quote against the stored pages. A quote it
+  can't find is marked on the card.
+- **The page** is a zero-dependency Node server that asks `run.py json` for the data.
+
+## What's inside
+
+| Path | What |
+|---|---|
+| `run.py` | The command line: `plan`, `find`, `visit`, `status`, `export`, `qualify-prep`, `import-labels` |
+| `dragnet/` | Maps search and grid, website visits and signals, qualifying, reports |
+| `.claude/commands/` | `/dragnet-setup` and `/dragnet-qualify` |
+| `.claude/agents/` | The sieve and the qualifier sub-agents |
+| `app/` | The local page (Node 20, no dependencies) |
+| `examples/` | A complete `niche.json` and `criteria.md` |
+| `tests/` | Unit tests: `python -m pytest -q` |
+| `config/`, `data/` | Your niche and your data (kept out of git) |
+
+## Settings
+
+Everything lives in `config/niche.json`; see [`examples/niche.json`](examples/niche.json).
+
+| Key | Default | What |
+|---|---|---|
+| `country`, `language` | | ISO country code and the Maps interface language (`hl`) for that country |
+| `areas` | | OpenStreetMap names: `"Utrecht, Utrecht, Nederland"`, `"Belgium"`, `"Greater Manchester"` |
+| `search_terms` | | Maps categories and words, in the country's language |
+| `category_exclude`, `name_keywords` | `[]` | The category filter and its override |
+| `keep_without_website` | `false` | Keep companies that have no website |
+| `grid.cell_km` | `"auto"` | Cell size in km, or `auto` |
+| `grid.max_depth` | `3` | How often a busy cell may be split |
+| `pace.block`, `pace.rest_minutes` | `12`, `20` | Searches per work block, minutes of rest |
+| `max_qualify` | `300` | Most companies to qualify |
+
+`DRAGNET_CONFIG` and `DRAGNET_DATA` (or `--config` and `--data`) let you keep several projects side by side.
+
+## Credits
+
+Built by Julian Verboom ([Viral Conversions](https://viralconversions.io)). MIT licensed; see `LICENSE`.

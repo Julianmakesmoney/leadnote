@@ -9,7 +9,8 @@ FIT_ORDER = {"yes": 0, "partly": 1, "no": 2, None: 3}
 
 def funnel(conn):
     s = conn.execute("SELECT SUM(status IN ('ok','empty')) AS done, COUNT(*) AS planned, COALESCE(SUM(CASE WHEN status = 'ok' THEN results END),0) AS res,"
-                     " SUM(status IN ('planned','error','blocked','empty') AND attempts < 3) AS left FROM search").fetchone()
+                     " SUM((status IN ('planned','error','blocked') AND attempts < 3) OR (status = 'empty' AND attempts < 2)) AS left"
+                     " FROM search").fetchone()
     places = conn.execute("SELECT COUNT(*) AS n, SUM(gate='pass') AS pass, SUM(gate='outside_area') AS outside,"
                           " SUM(gate='category_out') AS cat, SUM(gate='no_website') AS nosite FROM place").fetchone()
     companies = conn.execute("SELECT COUNT(*) FROM company WHERE duplicate_of IS NULL").fetchone()[0]

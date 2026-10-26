@@ -48,9 +48,9 @@ button, input, select { font: inherit; color: inherit; }
 main { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 
 /* Funnel */
-.funnel { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--line-soft);
+.funnel { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line-soft);
   border: 1px solid var(--line-soft); border-radius: var(--radius); overflow: hidden; }
-.step { background: var(--surface); padding: 22px 22px 18px; position: relative; min-width: 0; }
+.step { flex: 1 1 190px; background: var(--surface); padding: 22px 22px 18px; position: relative; min-width: 0; }
 .step .n { font-size: 34px; font-weight: 650; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .step .l { color: var(--muted); margin-top: 6px; font-size: 13px; }
 .step .s { color: var(--faint); font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
@@ -133,14 +133,12 @@ dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .chips span { background: var(--raise); border: 1px solid var(--line); border-radius: 7px; padding: 2px 8px; font-size: 12px; color: var(--muted); }
 
 @media (max-width: 980px) {
-  .funnel { grid-template-columns: repeat(3, 1fr); }
   .hide-m { display: none; }
 }
 @media (max-width: 640px) {
   .top { padding: 12px 16px; }
   main { padding: 18px 16px 60px; }
-  .funnel { grid-template-columns: repeat(2, 1fr); }
-  .step { padding: 16px; }
+  .step { padding: 16px; flex-basis: 140px; }
   .step .n { font-size: 26px; }
   .hide-s { display: none; }
   .primary { margin-left: 0; }
