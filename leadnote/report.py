@@ -40,7 +40,18 @@ def status_text(f):
     ])
 
 
-def rows(conn):
+def _matched(lab, texts):
+    """The nice-to-haves and buying signals a label names, as readable text ("N1 ISO 9001 certified")."""
+    try:
+        ids = json.loads(lab["hits"] or "[]") if lab and lab.get("hits") else []
+    except ValueError:
+        ids = []
+    return [f"{i} {texts[i]}" if i in texts else i for i in ids]
+
+
+def rows(conn, crit=None):
+    """Every company, best first: fit (yes, partly, no, not checked), then score (high to low), then name."""
+    texts = {it["id"]: it["text"] for it in (crit or {}).get("items", [])}
     out = []
     for c in conn.execute("SELECT * FROM company WHERE duplicate_of IS NULL ORDER BY id"):
         v = conn.execute("SELECT status, signals FROM visit WHERE company_id = ?", (c["id"],)).fetchone()
@@ -65,17 +76,22 @@ def rows(conn):
             "fit": fit, "reason": (deep or sieve or {}).get("reason"),
             "evidence": (deep or {}).get("evidence"), "evidence_url": (deep or {}).get("evidence_url"),
             "quote_found": (deep or {}).get("quote_found"), "opener": (deep or {}).get("opener"),
-            "size": (deep or {}).get("size"),
+            "size": (deep or {}).get("size"), "score": (deep or {}).get("score"),
+            "matched": _matched(deep, texts),
+            "checks": json.loads(deep["checks"]) if deep and deep.get("checks") else None,
             "briefing": br["markdown"] if br else None, "briefing_file": br["path"] if br else None,
             "brief": json.loads(br["data"]) if br else None,
         })
-    out.sort(key=lambda r: (FIT_ORDER.get(r["fit"], 3), (r["name"] or "").lower()))
+    out.sort(key=lambda r: (FIT_ORDER.get(r["fit"], 3), -(r["score"] if r["score"] is not None else -1),
+                            (r["name"] or "").lower()))
+    for i, r in enumerate(out, 1):
+        r["rank"] = i if r["fit"] in ("yes", "partly") else None
     return out
 
 
-CSV_FIELDS = ["fit", "name", "website", "phone", "area", "address", "category", "rating", "reviews", "size", "staff",
-              "founded", "reason", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin",
-              "maps_url", "briefing_file", "briefing"]
+CSV_FIELDS = ["rank", "fit", "score", "name", "website", "phone", "area", "address", "category", "rating", "reviews",
+              "size", "staff", "founded", "reason", "matched", "evidence", "evidence_url", "opener", "ask_for",
+              "contact_page", "jobs_page", "linkedin", "maps_url", "briefing_file", "briefing"]
 
 
 def to_csv(rs, fits=None):
@@ -85,5 +101,6 @@ def to_csv(rs, fits=None):
     for r in rs:
         if fits and (r["fit"] or "unlabeled") not in fits:
             continue
-        w.writerow(r)
+        w.writerow(dict(r, matched="; ".join(r.get("matched") or []),
+                        ask_for=(r.get("brief") or {}).get("ask_for") or ""))
     return buf.getvalue()

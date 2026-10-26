@@ -13,6 +13,7 @@ import json
 import os
 import re
 
+from . import criteria as crit_mod
 from . import db
 from .compact import clip, digest, keywords
 
@@ -151,23 +152,34 @@ def prefilter(conn, niche, rows):
 
 
 HEAD = {"sieve": "LEADNOTE sieve batch. Judge each company line against the criteria.",
-        "deep": "LEADNOTE deep batch. Judge each company block against the criteria."}
+        "deep": "LEADNOTE deep batch. Judge each company block against the criteria and name the criteria ids you used."}
 
 
-def _criteria_text(paths):
+def _criteria_text(paths, stage="deep"):
+    """The part of criteria.md this step needs (see criteria.STAGE_SECTIONS)."""
     if not os.path.exists(paths.criteria):
         return "(no criteria file)"
     with open(paths.criteria, encoding="utf-8") as f:
-        return f.read().strip()
+        return crit_mod.for_stage(f.read(), stage)
 
 
 def estimate(stage, batches, chars, companies):
     return int(batches * OVERHEAD_PER_BATCH[stage] + chars / CHARS_PER_TOKEN + companies * OUT_PER_COMPANY[stage])
 
 
-def prepare(conn, paths, niche, stage, batch_size=None, limit=None):
-    """Write the batches for one stage as compact text files. Returns a summary with counts and the cost estimate."""
+def forget_labels(conn):
+    """Drop every sieve and deep label (briefings stay), so all companies are judged again with new criteria."""
+    n = conn.execute("SELECT COUNT(*) FROM label").fetchone()[0]
+    conn.execute("DELETE FROM label")
+    conn.commit()
+    return n
+
+
+def prepare(conn, paths, niche, stage, batch_size=None, limit=None, again=False):
+    """Write the batches for one stage as compact text files. Returns a summary with counts and the cost estimate.
+    again=True (sieve only) first forgets the old labels, e.g. after the criteria changed."""
     assert stage in ("sieve", "deep")
+    forgotten = forget_labels(conn) if again and stage == "sieve" else 0
     batch_size = int(batch_size or BATCH_SIZE[stage])
     folder = os.path.join(paths.qualify_dir, stage)
     os.makedirs(folder, exist_ok=True)
@@ -178,7 +190,7 @@ def prepare(conn, paths, niche, stage, batch_size=None, limit=None):
     if stage == "sieve":
         rows, auto = prefilter(conn, niche, rows)
     kws = keywords(niche, paths.criteria)
-    crit = _criteria_text(paths)
+    crit = _criteria_text(paths, stage)
     files, chars = [], 0
     for i in range(0, len(rows), batch_size):
         chunk = rows[i:i + batch_size]
@@ -196,7 +208,7 @@ def prepare(conn, paths, niche, stage, batch_size=None, limit=None):
             f.write(text)
         files.append(path)
     return {"stage": stage, "companies": len(rows), "auto_pass": auto["pass"], "auto_drop": auto["drop"],
-            "keywords_missing": not niche.get("keywords"),
+            "keywords_missing": not niche.get("keywords"), "labels_forgotten": forgotten,
             "batches": len(files), "files": files, "est_tokens": estimate(stage, len(files), chars, len(rows)),
             "est_minutes_parallel4": round(-(-len(files) // 4) * SECONDS_PER_BATCH[stage] / 60, 1)}
 
@@ -222,19 +234,33 @@ def quote_found(conn, company_id, quote):
     return bool(parts) and all(p in hay for p in parts)
 
 
-def import_labels(conn, path, log=print):
-    """Read one labels file {stage, labels: [{id, fit, reason, evidence, evidence_url, opener, size}]}."""
+def read_labels_file(path):
+    """The JSON a sub-agent wrote, tolerant of text around it. Compact sieve rows become dicts."""
     with open(path, encoding="utf-8") as f:
         raw = f.read()
-    m = re.search(r"\{.*\}", raw, re.S)          # tolerate text around the JSON
+    m = re.search(r"\{.*\}", raw, re.S)
     data = json.loads(m.group(0) if m else raw)
-    stage = data.get("stage") or ("sieve" if "sieve" in os.path.basename(os.path.dirname(path)) else "deep")
-    allowed = SIEVE_FIT if stage == "sieve" else DEEP_FIT
-    ok, problems = 0, []
+    labels = []
     for lab in data.get("labels", []):
         if isinstance(lab, (list, tuple)):          # compact sieve form: [id, "pass"] or [id, "drop", "reason"]
             lab = {"id": lab[0] if lab else None, "fit": lab[1] if len(lab) > 1 else None,
                    "reason": lab[2] if len(lab) > 2 else None}
+        labels.append(lab)
+    return data.get("stage"), labels
+
+
+def import_labels(conn, path, log=print, crit=None):
+    """Read one labels file {stage, labels: [{id, fit, reason, evidence, evidence_url, opener, size, hits, fails,
+    unclear, breakers}]}. Deep labels go through criteria.enforce(): must-haves and deal-breakers count hard, and
+    the nice-to-haves and buying signals they show give the score."""
+    crit = crit or crit_mod.parse("")
+    stage, labels = read_labels_file(path)
+    stage = stage or ("sieve" if "sieve" in os.path.basename(os.path.dirname(path)) else "deep")
+    if stage == "calibrate":
+        raise SystemExit(f"{path} is a calibration file: show it with 'python run.py calibrate-show {path}'")
+    allowed = SIEVE_FIT if stage == "sieve" else DEEP_FIT
+    ok, problems = 0, []
+    for lab in labels:
         try:
             cid = int(lab.get("id"))
         except (TypeError, ValueError):
@@ -247,6 +273,11 @@ def import_labels(conn, path, log=print):
         if fit not in allowed:
             problems.append(f"id {cid}: fit '{fit}' is not one of {allowed}")
             continue
+        score, hits, checks = None, None, None
+        if stage == "deep":
+            fit, score, checks, notes = crit_mod.enforce(lab, crit)
+            problems += [f"id {cid}: {n}" for n in notes]
+            hits = [i for i in crit_mod._ids(lab.get("hits")) if not crit["items"] or i in crit_mod.item_text(crit)]
         evidence = (lab.get("evidence") or "").strip() or None
         opener = (lab.get("opener") or "").strip() or None
         size = (lab.get("size") or "").strip() or None
@@ -260,11 +291,14 @@ def import_labels(conn, path, log=print):
         found = quote_found(conn, cid, evidence) if evidence else None
         if evidence and not found:
             problems.append(f"id {cid}: evidence quote not found on the stored pages (kept, marked unverified)")
+        if fit == "no":
+            opener = None
         conn.execute("INSERT OR REPLACE INTO label (company_id, stage, fit, reason, evidence, evidence_url, quote_found,"
-                     " opener, size, labeled_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                     " opener, size, score, hits, checks, labeled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (cid, stage, fit, (lab.get("reason") or "").strip() or None, evidence,
                       (lab.get("evidence_url") or "").strip() or None, None if found is None else int(found), opener,
-                      size, db.now()))
+                      size, score, json.dumps(hits) if hits else None, json.dumps(checks) if checks else None,
+                      db.now()))
         ok += 1
     conn.commit()
     log(f"{os.path.basename(path)}: {ok} {stage} labels imported" + (f", {len(problems)} notes:" if problems else ""))

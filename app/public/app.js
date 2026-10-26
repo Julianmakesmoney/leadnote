@@ -29,7 +29,7 @@ function filtered() {
     return true;
   });
   const key = {
-    fit: (r) => FIT_RANK[r.fit] ?? 3, name: (r) => (r.name || "").toLowerCase(), category: (r) => (r.category || "").toLowerCase(),
+    fit: (r) => (FIT_RANK[r.fit] ?? 3) * 1000 - (r.score ?? -1), name: (r) => (r.name || "").toLowerCase(), category: (r) => (r.category || "").toLowerCase(),
     area: (r) => r.area || "", size: (r) => r.staff ?? -1, reviews: (r) => r.reviews ?? -1, jobs: (r) => (r.job_titles || []).length,
   }[state.sort];
   rs.sort((a, b) => {
@@ -81,7 +81,7 @@ function renderRows() {
   } else empty.hidden = true;
   $("#rows").innerHTML = rs.slice(0, 2000).map((r) => `
     <tr data-id="${r.id}">
-      <td>${r.fit ? `<span class="badge ${r.fit}">${r.fit}</span>` : `<span class="badge">not checked</span>`}</td>
+      <td>${r.fit ? `<span class="badge ${r.fit}">${r.fit}</span>` : `<span class="badge">not checked</span>`}${r.score != null && r.fit !== "no" ? `<div class="score" title="Score from the nice-to-haves and buying signals">${r.score}</div>` : ""}</td>
       <td><div class="name">${esc(r.name)}${r.brief ? ' <span class="tag">page</span>' : ""}</div><div class="sub">${esc(r.reason || r.domain || "")}</div></td>
       <td class="hide-s">${esc(r.category || "")}</td>
       <td class="hide-m">${esc(r.area || "")}</td>
@@ -100,6 +100,8 @@ function briefHtml(r) {
   const dm = (b.decision_makers || []).map((d) => `<li>${esc(d.name)}, ${esc(d.role)}</li>`).join("");
   return `<div class="block brief"><h3>The page: cold-call briefing</h3>
     <div class="whynow">${esc(b.who_why_now || "")}</div>
+    ${b.ask_for ? `<h4>Ask for</h4><div>${esc(b.ask_for)}</div>` : ""}
+    ${b.call_goal ? `<h4>Goal of this call</h4><div>${esc(b.call_goal)}</div>` : ""}
     ${pts ? `<h4>Talking points</h4><ol>${pts}</ol>` : ""}
     ${obj ? `<h4>Likely objections</h4><ul>${obj}</ul>` : ""}
     ${qs ? `<h4>Ask</h4><ul>${qs}</ul>` : ""}
@@ -121,7 +123,7 @@ function openCard(id) {
     <div class="meta">${esc([r.category, r.address, r.area].filter(Boolean).join(" · "))}</div>
     <div class="links">${link(r.website, r.domain || "Website")}${link(r.maps_url, "Maps")}${link(r.contact_page, "Contact page")}${link(r.jobs_page, "Jobs")}${link(r.linkedin, "LinkedIn")}</div>
     ${opener ? `<div class="block"><h3>Opening line</h3><div class="opener"><div id="opentext">${esc(opener)}</div><button id="copy">Copy</button></div></div>` : ""}
-    ${r.reason ? `<div class="block"><h3>Why</h3><div>${esc(r.reason)}</div></div>` : ""}
+    ${r.reason ? `<div class="block"><h3>Why${r.score != null && r.fit !== "no" ? ` · score ${r.score}` : ""}</h3><div>${esc(r.reason)}</div>${(r.matched || []).length ? `<div class="chips">${r.matched.map((t) => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>` : ""}
     ${r.evidence ? `<div class="block"><h3>Evidence</h3><blockquote>“${esc(r.evidence)}”</blockquote><div class="src">${r.evidence_url ? link(r.evidence_url, r.evidence_url) : "Google Maps listing"}${verified}</div></div>` : ""}
     ${briefHtml(r)}
     <div class="block"><h3>Signals</h3><dl>
@@ -145,8 +147,8 @@ function closeCard() {
   $("#scrim").classList.remove("on");
 }
 
-const CSV = ["fit", "name", "website", "phone", "area", "address", "category", "rating", "reviews", "size", "staff", "founded",
-  "reason", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin", "maps_url", "briefing_file", "briefing"];
+const CSV = ["fit", "score", "name", "website", "phone", "area", "address", "category", "rating", "reviews", "size", "staff", "founded",
+  "reason", "matched", "evidence", "evidence_url", "opener", "contact_page", "jobs_page", "linkedin", "maps_url", "briefing_file", "briefing"];
 function exportCsv() {
   const cell = (v) => { const s = Array.isArray(v) ? v.join("; ") : String(v ?? ""); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const lines = [CSV.join(",")].concat(filtered().map((r) => CSV.map((k) => cell(k === "size" ? sizeOf(r) : r[k])).join(",")));

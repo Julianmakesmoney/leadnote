@@ -15,7 +15,12 @@ If the user asks you to set it up ("clone … and set it up for me"):
 
 ## The flow
 
-- `/leadnote-setup`: the interview. One question at a time, examples with every question, in the user's language.
+- `/leadnote-setup`: one pasted description (summary, then only what is missing) or the interview: one question at a
+  time, examples with every question, in the user's language. Best clients' sites are read with
+  `python run.py lookalike URL...`. It writes `config/criteria.md` in the fixed outline of `examples/criteria.md`
+  (numbered M/N/D/S/L items); `python run.py criteria-check` checks it.
+- `/leadnote-calibrate`: about 10 visited companies judged, the user corrects, corrections become L-rules
+  (`python run.py learn`). Stores no labels.
 - `python run.py plan`: preview of the grid and the time. Safe; it does not touch Google.
 - `python run.py find`: the Maps search. It is slow on purpose (a work-rest rhythm against blocks) and can be stopped
   and restarted at any time. For a long run, start it in the background and tell the user how to follow it.
@@ -34,10 +39,12 @@ If the user asks you to set it up ("clone … and set it up for me"):
 | `leadnote/maps.py` | Maps search: grid queue, list reading, splitting full cells, de-duplication, work-rest rhythm |
 | `leadnote/area.py` | Areas from OpenStreetMap Nominatim, the grid, point-in-area |
 | `leadnote/visit.py`, `leadnote/signals.py` | Website visits and the general signals (services, jobs, size, contact) |
+| `leadnote/criteria.py` | The criteria outline: sections, numbered items, weights, what each step reads, hard rules and score |
+| `leadnote/calibrate.py`, `leadnote/lookalike.py` | Calibration rounds; reading best clients' sites during setup |
 | `leadnote/qualify.py` | Compact text batches for the sub-agents, no-AI prefilter, and `import-labels` with quote checking |
 | `leadnote/compact.py` | Picks the sentences the AI reads (menus and boilerplate out, `keywords` in); keeps qualifying cheap |
 | `leadnote/brief.py` | Briefing batches, import, markdown per company |
-| `.claude/commands/` | `/leadnote-setup`, `/leadnote-qualify`, `/leadnote-brief` |
+| `.claude/commands/` | `/leadnote-setup`, `/leadnote-calibrate`, `/leadnote-qualify`, `/leadnote-brief` |
 | `.claude/agents/` | `leadnote-sieve` (Haiku), `leadnote-qualifier` and `leadnote-briefer` (Sonnet) |
 | `config/` | The user's niche (not in git). Examples in `examples/` |
 | `data/` | The database and work files (not in git). `LEADNOTE_DATA` points elsewhere |
@@ -48,5 +55,7 @@ If the user asks you to set it up ("clone … and set it up for me"):
 - Be honest about Google's terms: automated reading of Maps is not allowed by Google; the user runs this at their own
   responsibility. Do not add tricks to evade detection beyond the slow rhythm that is already there.
 - Never send raw site text to a sub-agent: batches go through `compact.py`, so every sentence stays literal page text.
+- Must-haves and deal-breakers count hard (`criteria.enforce`); nice-to-haves and buying signals only rank. Keep
+  that in code, not only in prompts.
 - Labels must quote the stored pages literally. `import-labels` checks every quote and marks the ones it cannot find.
 - Write plain English in code, docs and the page. Keep it simple and reliable over clever.

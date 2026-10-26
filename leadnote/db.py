@@ -94,6 +94,9 @@ CREATE TABLE IF NOT EXISTS label (
     quote_found   INTEGER,                -- 1 if the quote was found in the stored page text
     opener        TEXT,                   -- one specific line to open the conversation with
     size          TEXT,
+    score         INTEGER,                -- 0-100 from the nice-to-haves and buying signals it shows (deep only)
+    hits          TEXT,                   -- JSON list of criteria ids it shows (N1, S2, ...)
+    checks        TEXT,                   -- JSON {fails, unclear, breakers}: must-haves and deal-breakers named
     labeled_at    TEXT NOT NULL,
     PRIMARY KEY (company_id, stage)
 );
@@ -123,6 +126,11 @@ def connect(path):
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    have = {r[1] for r in conn.execute("PRAGMA table_info(label)")}
+    for col, kind in (("score", "INTEGER"), ("hits", "TEXT"), ("checks", "TEXT")):
+        if col not in have:                     # databases made before scoring existed
+            conn.execute(f"ALTER TABLE label ADD COLUMN {col} {kind}")
+    conn.commit()
     return conn
 
 

@@ -63,26 +63,32 @@ Or open Claude Code anywhere and say: "Clone github.com/Julianmakesmoney/leadnot
 
 ## Run it
 
-1. **`/leadnote-setup`** in Claude Code. A short interview, one question at a time: what you sell, who your ideal
-   customer is, what's a deal-breaker, and where. Claude proposes Google Maps search terms in the language of that
-   country, you pick. It writes `config/niche.json` and `config/criteria.md`.
+1. **`/leadnote-setup`** in Claude Code. Two ways in (see *Setup: tell it exactly who you want* below): paste one
+   long description and Claude only asks what's missing, or answer a short interview, one question at a time. It
+   writes `config/niche.json` and `config/criteria.md`.
 2. **`python run.py find`** sweeps Google Maps. It shows live how many searches, results and unique companies it has.
    It is slow on purpose (see *Google and the pace* below); stop it with Ctrl+C whenever you like and run it again
    to continue where it left off. `python run.py plan` shows the size of the job first.
 3. **`python run.py visit`** reads each company's own website: what they sell or do, open jobs, size signals, the
    contact page.
-4. **`/leadnote-qualify`** in Claude Code. It shows how many companies and the estimated tokens and waits for your
+4. **`/leadnote-calibrate`** in Claude Code (recommended, about 2 minutes). Claude judges 10 of the visited
+   companies and shows one line each; you say "right" or "wrong, because ...". Every correction becomes a rule in
+   your criteria. Up to 3 rounds, until you agree with it.
+5. **`/leadnote-qualify`** in Claude Code. It shows how many companies and the estimated tokens and waits for your
    OK. Then a quick sieve on a small model drops what clearly doesn't fit, and a deeper check on a better model
-   labels the rest: **fit** (yes, partly, no), the **reason**, a **verbatim quote** from their site as evidence, and
-   **one opening line** built on the most specific true detail it found.
-5. **`/leadnote-brief`** in Claude Code (optional). For every **fit = yes** company, a sub-agent does a short deep
-   research (their own site and recent news) and writes a **cold-call briefing**: who they are and why now, 3
-   talking points with evidence, the opener, 2 likely objections with answers, and what to ask. It shows the cost
+   labels the rest: **fit** (yes, partly, no), a **score** (0-100) that ranks the fits, the **reason**, a
+   **verbatim quote** from their site as evidence, and **one opening line** built on the most specific true detail
+   it found. Must-haves and deal-breakers count hard; nice-to-haves and buying signals decide the order.
+6. **`/leadnote-brief`** in Claude Code (optional). For every **fit = yes** company, best score first, a sub-agent
+   does a short deep research (their own site and recent news) and writes a **cold-call briefing**: who they are
+   and why now, **who to ask for**, the goal of the call, 3 talking points with evidence, the opener, 2 likely
+   objections with answers, and what to ask. It shows the cost
    first; `max_brief` (default 25) caps it. Briefings land in `data/briefings/<id>-<name>.md`, on the company card
    and in the CSV. Partly-fits keep their short qualification.
-6. **`npm start`** and open http://localhost:4760. A funnel on top (searches → results → unique → visited → fit),
-   a table you can filter by fit, area, size and hiring, a card per company with the evidence and the opening
-   line, and **Export CSV** for calling, LinkedIn or your CRM. `python run.py export` writes the same CSV.
+7. **`npm start`** and open http://localhost:4760. A funnel on top (searches → results → unique → visited → fit),
+   a table you can filter by fit, area, size and hiring (best first), a card per company with the evidence, the
+   criteria it meets and the opening line, and **Export CSV** for calling, LinkedIn or your CRM.
+   `python run.py export` writes the same CSV, ranked.
 
 Use `.venv/bin/python` (Windows: `.venv\Scripts\python`) in place of `python` if you set up the virtual environment
 as above. In Claude Code, add `--yes` to `/leadnote-qualify` or `/leadnote-brief` to skip the OK question (for
@@ -115,19 +121,68 @@ of 250+ people, a deal-breaker), with every evidence quote found on the stored p
 listings, 210 companies (70 of them without a website, let in by a filter bug that has since been fixed),
 128 readable websites, in 27 minutes, without a single block from Google.
 
-## What to put in your criteria
+## Setup: tell it exactly who you want
 
-`/leadnote-setup` writes `config/criteria.md` for you; edit it whenever you learn something. The qualifier is only
-as good as this page. Put in:
+LEADNOTE is only as precise as your criteria. `/leadnote-setup` writes them with you, in one of two ways.
 
-- **What you sell**, in one or two lines.
-- **Fit: yes.** The kind of company, as things a website can show: what they do, for whom, size range.
-- **Fit: partly.** Close, with one doubt: too big, the matching service is a side line, unclear customers.
-- **Fit: no.** Your deal-breakers: freelancers, chains, consumer shops, the wrong trade.
-- **Signals that make it stronger.** Hiring, a service page for X, a webshop, a named sector, how long they've existed.
-- **Opening line.** What the first sentence should touch on, the tone, and the language.
+**One prompt.** Paste everything at once after the command: `/leadnote-setup <your description>`. Claude pulls out
+your offer, price, ideal customer, best clients, deal-breakers, buying signals, the person you want to speak to and
+the area, shows one short "This is what I understood", and only asks what's missing or contradicts itself.
+[`examples/setup-prompt.md`](examples/setup-prompt.md) has a **template to fill in**, and a **ready-made prompt for
+ChatGPT or Claude** that writes that description from your website in a minute.
 
-See [`examples/criteria.md`](examples/criteria.md) for a complete one.
+**The interview.** Without a description, Claude asks one question at a time, with examples, and skips what it
+already knows:
+
+1. What you sell, and roughly what it costs (so it can judge who can afford it).
+2. Your ideal customer.
+3. 2 or 3 of your best clients. Claude reads their websites (`python run.py lookalike <url> ...`), tells you what
+   they have in common, and asks whether that is what makes them good.
+4. 1 or 2 bad fits, and why.
+5. Must-haves versus nice-to-haves (Claude proposes the split and the weights; you adjust).
+6. Deal-breakers.
+7. Buying signals: hiring for a role, a new office, growth, software or brands they name, recent news.
+8. Who you want to speak to (used by the briefing: "ask for ...").
+9. What a good first call looks like (used for the opener and the objections).
+10. The area, then the search terms in that country's language.
+
+The result is `config/criteria.md` in a fixed outline: **Offer, Price, Ideal customer, Lookalikes from best
+clients, Must-haves, Nice-to-haves, Deal-breakers, Buying signals, Who to ask for, What a good first call looks
+like, Assumptions, Learned from calibration**. Items are numbered so the AI can name them and LEADNOTE can count
+them:
+
+```markdown
+## Must-haves
+- M1: Runs IT for other businesses on an ongoing contract.
+## Nice-to-haves
+- N1 (weight 3): Offers or mentions backup already.
+## Deal-breakers
+- D1: Computer or phone repair shops for consumers.
+## Buying signals
+- S1 (weight 3): Hiring for the service desk.
+```
+
+How they count: a deal-breaker or a must-have the site contradicts makes a company **no**; a must-have the site
+doesn't show turns a **yes** into **partly**; the nice-to-haves and buying signals it shows give the **score**
+(their weights, as a share of 100) that puts the best fits on top. `python run.py criteria-check` checks the file.
+See [`examples/criteria.md`](examples/criteria.md) for a complete one; edit it whenever you learn something.
+
+## Calibration: check it on 10 companies first
+
+Before you spend tokens on hundreds of companies, `/leadnote-calibrate` checks the criteria on about 10 you already
+visited: a mix of likely yes, likely partly and likely no. Claude judges them and shows one line each:
+
+```
+3. Example IT (example-it.nl) | id 42 | YES 67 | Managed IT for care homes on a monthly contract, hiring.
+4. Sample Web (sample-web.nl) | id 57 | NO | Web design agency, no IT management. [D2: Web design, ...]
+```
+
+You answer per company "right" or "wrong, because ...". Claude turns each correction into a rule a website can
+show ("a company whose only IT service is hosting is not a fit") and, after your OK, adds it to *Learned from
+calibration* (`python run.py learn "..."`). The next round re-judges the ones that were wrong plus a few new ones;
+at most 3 rounds. Calibration stores no labels, and costs about one deep batch (~110k tokens) per round. Setup
+offers it at the end when there are visited companies; after big changes, `/leadnote-qualify --again` judges
+everything again.
 
 ## Cost and time
 
@@ -187,7 +242,9 @@ Europe.
 - **Qualifying.** `run.py qualify-prep` writes compact text batches to `data/qualify/` (criteria on top, then a
   line or a short block per company with only the sentences that matter); Claude Code's sub-agents
   (`.claude/agents/leadnote-sieve.md` on Haiku, `.claude/agents/leadnote-qualifier.md` on Sonnet) write labels next to
-  them; `run.py import-labels` stores them and checks every evidence quote against the stored pages. A quote it
+  them; `run.py import-labels` applies the hard rules, computes the score, stores the labels and checks every
+  evidence quote against the stored pages. Each step reads only the criteria sections it needs (the sieve gets
+  offer, ideal customer, must-haves, deal-breakers and learned rules). A quote it
   can't find is marked on the card. `/leadnote-brief` works the same way with `run.py brief-prep` and the
   `leadnote-briefer` sub-agent.
 - **The page** is a zero-dependency Node server that asks `run.py json` for the data.
@@ -196,12 +253,12 @@ Europe.
 
 | Path | What |
 |---|---|
-| `run.py` | The command line: `plan`, `find`, `visit`, `status`, `export`, `qualify-prep`, `brief-prep`, `import-labels` |
+| `run.py` | The command line: `plan`, `find`, `visit`, `status`, `export`, `criteria-check`, `lookalike`, `calibrate-prep`, `calibrate-show`, `learn`, `qualify-prep`, `brief-prep`, `import-labels` |
 | `leadnote/` | Maps search and grid, website visits and signals, qualifying, reports |
-| `.claude/commands/` | `/leadnote-setup`, `/leadnote-qualify` and `/leadnote-brief` |
+| `.claude/commands/` | `/leadnote-setup`, `/leadnote-calibrate`, `/leadnote-qualify` and `/leadnote-brief` |
 | `.claude/agents/` | The sieve, qualifier and briefer sub-agents |
 | `app/` | The local page (Node 20, no dependencies) |
-| `examples/` | A complete `niche.json` and `criteria.md` |
+| `examples/` | A complete `niche.json` and `criteria.md`, and `setup-prompt.md` (template and AI prompt) |
 | `tests/` | Unit tests: `pip install pytest`, then `python -m pytest -q` |
 | `config/`, `data/` | Your niche and your data (kept out of git) |
 

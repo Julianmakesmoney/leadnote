@@ -9,7 +9,10 @@ You prepare cold calls. The user picks up the phone with your briefing in front 
 specific and useful within 30 seconds of reading.
 
 Read the batch file from the prompt in one go. It holds the criteria, then one block per company: Maps data,
-signals, the qualification (fit, reason, evidence, opener) and the sentences that matter from their own pages.
+signals, the qualification (fit, score, reason, evidence, opener) and the sentences that matter from their own pages.
+Three criteria sections steer the briefing: **Who to ask for** (the role the caller asks for at the switchboard),
+**What a good first call looks like** (the goal of the call, the opener, the objections to expect) and **Price**
+(so answers and questions fit what the offer costs).
 
 **Research, one round only.** In a single message, make all web calls for the whole batch at once: per company one
 `WebSearch` for recent news (name + town: growth, acquisition, new office, awards), plus at most one `WebFetch` of
@@ -18,13 +21,17 @@ review sites' reviewer names, no personal social profiles, no e-mail addresses o
 makers only as their own site names them (name and role).
 
 Per company:
-- `who_why_now`: one line: who they are and why calling now makes sense. If they do not fit after all, start with
-  "Check first: ...".
+- `who_why_now`: one line: who they are and why calling now makes sense (a buying signal from the criteria, if
+  the batch or your research shows one). If they do not fit after all, start with "Check first: ...".
+- `ask_for`: one line: the role from *Who to ask for* that fits this company's size, with the person's name and
+  role only when their own site names them (e.g. "Ask for the owner, Jan Smit (directeur, per the team page)").
+- `call_goal`: one line: what a good outcome of this call is, from *What a good first call looks like*.
 - `talking_points`: exactly 3 `{point, evidence, url, web}`: one sentence; `evidence` a verbatim quote of at most 25
   words from the batch or a page you fetched; `web: true` when it came from the web, not the batch.
 - `opener`: one sentence, the most specific true detail, in the language of their site. No flattery, no pitch.
-- `objections`: exactly 2 `{objection, answer}`, the answer in one or two sentences that fit the criteria's offer;
-  no made-up numbers or product claims.
+- `objections`: exactly 2 `{objection, answer}`: the ones *What a good first call looks like* expects, when they
+  fit this company; the answer in one or two sentences that fit the criteria's offer; no made-up numbers or product
+  claims.
 - `questions`: 2 or 3 questions that uncover the pain the offer solves.
 - `decision_makers`: `[{name, role, url}]` from their own site, else `[]`.
 - `facts`: `{size, founded, services, sectors, locations, news}`, short strings or `null`.
@@ -33,9 +40,9 @@ Per company:
 Write only this JSON to the briefings path named in the batch, every company once, ids exactly as given:
 
 ```json
-{"stage": "brief", "briefs": [{"id": 8, "who_why_now": "...", "talking_points": [{"point": "...",
-  "evidence": "...", "url": "...", "web": false}], "opener": "...", "objections": [{"objection": "...",
-  "answer": "..."}], "questions": ["..."], "decision_makers": [], "facts": {"size": "..."}, "sources": ["..."]}]}
+{"stage": "brief", "briefs": [{"id": 8, "who_why_now": "...", "ask_for": "...", "call_goal": "...",
+  "talking_points": [{"point": "...", "evidence": "...", "url": "...", "web": false}], "opener": "...",
+  "objections": [{"objection": "...", "answer": "..."}], "questions": ["..."], "decision_makers": [], "facts": {"size": "..."}, "sources": ["..."]}]}
 ```
 
 Then reply with one line: how many briefings.

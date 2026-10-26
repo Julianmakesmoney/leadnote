@@ -28,12 +28,13 @@ def candidates(conn, fits=("yes",), again=False):
         f"SELECT c.* FROM company c JOIN label l ON l.company_id = c.id AND l.stage = 'deep' AND l.fit IN ({marks})"
         " WHERE c.duplicate_of IS NULL" + ("" if again else
                                             " AND NOT EXISTS (SELECT 1 FROM briefing b WHERE b.company_id = c.id)") +
-        " ORDER BY c.id", fits).fetchall()
+        " ORDER BY CASE l.fit WHEN 'yes' THEN 0 ELSE 1 END, COALESCE(l.score, -1) DESC, c.id", fits).fetchall()
 
 
 def brief_block(conn, c, kws):
     lab = conn.execute("SELECT * FROM label WHERE company_id = ? AND stage = 'deep'", (c["id"],)).fetchone()
-    q = [f"qualified: {lab['fit']}, size {lab['size'] or 'unknown'}. {lab['reason'] or ''}",
+    score = f", score {lab['score']}" if lab["score"] is not None else ""
+    q = [f"qualified: {lab['fit']}{score}, size {lab['size'] or 'unknown'}. {lab['reason'] or ''}",
          f"evidence: \"{lab['evidence'] or ''}\" ({lab['evidence_url'] or 'maps'})",
          f"opener: {lab['opener'] or ''}"]
     block = deep_block(conn, c, kws, budget=BRIEF_BUDGET, with_sieve=False).split("\n")
@@ -50,7 +51,7 @@ def prepare(conn, paths, niche, fits=("yes",), limit=None, batch_size=BATCH_SIZE
     waiting = len(rows)
     rows = rows[:cap]
     kws = keywords(niche, paths.criteria)
-    crit = _criteria_text(paths)
+    crit = _criteria_text(paths, "brief")
     files, chars = [], 0
     for i in range(0, len(rows), batch_size):
         chunk = rows[i:i + batch_size]
@@ -79,6 +80,10 @@ def render(c, b):
     if meta:
         out += [meta, ""]
     out += ["## Who and why now", b.get("who_why_now", "").strip(), ""]
+    if b.get("ask_for"):
+        out += ["## Ask for", b["ask_for"].strip(), ""]
+    if b.get("call_goal"):
+        out += ["## Goal of this call", b["call_goal"].strip(), ""]
     if b.get("talking_points"):
         out.append("## Talking points")
         for i, t in enumerate(b["talking_points"], 1):
