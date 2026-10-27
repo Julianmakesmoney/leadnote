@@ -3,8 +3,8 @@
 import json
 import sqlite3
 
-from leadnote import db, qualify
-from leadnote.compact import digest, keywords, sentences
+from goodleads import db, qualify
+from goodleads.compact import digest, keywords, sentences
 
 MENU = ["Home", "Diensten", "Over ons", "Contact", "Werken bij"]
 TEXT = ("Home Diensten Over ons Contact Werken bij Wij ontzorgen MKB-bedrijven met managed IT en een eigen "

@@ -1,4 +1,4 @@
-"""Calibration (/leadnote-calibrate): check the criteria on about 10 real companies before qualifying hundreds.
+"""Calibration (/goodleads-calibrate): check the criteria on about 10 real companies before qualifying hundreds.
 
     prepare()  picks a mix of visited companies (likely yes, likely partly, likely no) and writes one deep-style batch
     show()     reads the labels the qualifier wrote and prints one line per company, with the hard rules applied
@@ -103,7 +103,7 @@ def prepare(conn, paths, niche, n=10, recheck=(), fresh=False):
         os.remove(label_file)
     rows = [conn.execute("SELECT * FROM company WHERE id = ?", (i,)).fetchone() for i in ids]
     body = "## Companies\n\n" + "\n\n".join(deep_block(conn, c, kws, with_sieve=False) for c in rows)
-    text = (f"LEADNOTE calibration batch (round {rnd}). {len(rows)} companies. Judge each company block against the "
+    text = (f"GOODLEADS calibration batch (round {rnd}). {len(rows)} companies. Judge each company block against the "
             f"criteria and name the criteria ids you used; use \"stage\": \"calibrate\".\n"
             f"Write the labels to: {label_file}\n\n## Criteria\n{_criteria_text(paths, 'deep')}\n\n{body}\n")
     with open(path, "w", encoding="utf-8") as f:

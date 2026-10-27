@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LEADNOTE: the Death Note for sales. Every company on the map; a briefing for the ones worth calling.
+"""GOODLEADS: the Death Note for sales. Every company on the map; a briefing for the ones worth calling.
 
     python run.py plan                 preview the grid: areas, cells, searches, rough time (does not touch Google)
     python run.py find [--max N]       search Google Maps cell by cell; stop any time, run again to continue
@@ -7,16 +7,16 @@
     python run.py status               the funnel so far
     python run.py export [--fit yes,partly] [--out prospects.csv]
     python run.py criteria-check       is config/criteria.md complete? (sections, numbered items, weights)
-    python run.py lookalike URL...     read a few best clients' sites for /leadnote-setup (nothing stored)
-    python run.py calibrate-prep [--n 10] [--recheck IDS]   a calibration batch for /leadnote-calibrate
+    python run.py lookalike URL...     read a few best clients' sites for /goodleads-setup (nothing stored)
+    python run.py calibrate-prep [--n 10] [--recheck IDS]   a calibration batch for /goodleads-calibrate
     python run.py calibrate-show FILE  one line per company: verdict, score, reason
     python run.py learn "rule" ...     add rules to 'Learned from calibration' in criteria.md
-    python run.py qualify-prep --stage sieve|deep [--again]    batches for /leadnote-qualify
-    python run.py brief-prep [--fit yes]             batches for /leadnote-brief
+    python run.py qualify-prep --stage sieve|deep [--again]    batches for /goodleads-qualify
+    python run.py brief-prep [--fit yes]             batches for /goodleads-brief
     python run.py import-labels FILE...              store the labels or briefings Claude wrote
     python run.py json                 everything the local page shows (used by npm start)
 
-Options for every command: --config DIR, --data DIR (or LEADNOTE_CONFIG / LEADNOTE_DATA).
+Options for every command: --config DIR, --data DIR (or GOODLEADS_CONFIG / GOODLEADS_DATA).
 """
 
 import argparse
@@ -25,11 +25,11 @@ import math
 import os
 import sys
 
-from leadnote import config, criteria, db, report
+from goodleads import config, criteria, db, report
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="run.py", description="LEADNOTE: find and qualify B2B prospects from Google Maps.")
+    ap = argparse.ArgumentParser(prog="run.py", description="GOODLEADS: find and qualify B2B prospects from Google Maps.")
     ap.add_argument("--config", help="folder with niche.json and criteria.md (default: ./config)")
     ap.add_argument("--data", help="folder for the database and work files (default: ./data)")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -45,7 +45,7 @@ def main(argv=None):
     e = sub.add_parser("export", help="CSV for calling, LinkedIn or your CRM")
     e.add_argument("--fit", default="yes,partly", help="comma list of yes, partly, no, unlabeled, or 'all'")
     e.add_argument("--out", help="file to write (default: data/prospects.csv); '-' for stdout")
-    q = sub.add_parser("qualify-prep", help="write batches for /leadnote-qualify")
+    q = sub.add_parser("qualify-prep", help="write batches for /goodleads-qualify")
     q.add_argument("--stage", choices=["sieve", "deep"], required=True)
     q.add_argument("--batch", type=int, help="companies per batch (sieve 40, deep 8)")
     q.add_argument("--limit", type=int, help="at most this many companies")
@@ -62,7 +62,7 @@ def main(argv=None):
     ln = sub.add_parser("learn", help="add rules to 'Learned from calibration' in criteria.md")
     ln.add_argument("rules", nargs="+")
     ln.add_argument("--note", help="e.g. 'round 1'")
-    b = sub.add_parser("brief-prep", help="write batches for /leadnote-brief (fit=yes by default)")
+    b = sub.add_parser("brief-prep", help="write batches for /goodleads-brief (fit=yes by default)")
     b.add_argument("--fit", default="yes", help="comma list: yes, partly")
     b.add_argument("--limit", type=int, help="at most this many (default: max_brief in niche.json, 25)")
     b.add_argument("--again", action="store_true", help="also companies that already have a briefing")
@@ -75,7 +75,7 @@ def main(argv=None):
 
     if a.cmd == "criteria-check":
         if not os.path.exists(paths.criteria):
-            raise SystemExit(f"No {paths.criteria} yet. Run /leadnote-setup.")
+            raise SystemExit(f"No {paths.criteria} yet. Run /goodleads-setup.")
         c = criteria.load(paths.criteria)
         kinds = {}
         for it in c["items"]:
@@ -89,14 +89,14 @@ def main(argv=None):
 
     if a.cmd == "learn":
         if not os.path.exists(paths.criteria):
-            raise SystemExit(f"No {paths.criteria} yet. Run /leadnote-setup.")
+            raise SystemExit(f"No {paths.criteria} yet. Run /goodleads-setup.")
         ids = criteria.add_learned(paths.criteria, a.rules, note=a.note)
         print(f"added {', '.join(ids)} to 'Learned from calibration' in {paths.criteria}")
         return
 
     if a.cmd == "lookalike":
-        from leadnote import lookalike
-        from leadnote.compact import keywords
+        from goodleads import lookalike
+        from goodleads.compact import keywords
         kws = []
         if os.path.exists(paths.niche):
             with open(paths.niche, encoding="utf-8") as fh:
@@ -142,7 +142,7 @@ def main(argv=None):
         return
 
     if a.cmd == "import-labels":
-        from leadnote import brief, qualify
+        from goodleads import brief, qualify
         conn = db.connect(paths.db)
         total = 0
         for path in a.files:
@@ -157,7 +157,7 @@ def main(argv=None):
     niche = config.load_niche(paths)
 
     if a.cmd == "plan":
-        from leadnote import area, maps
+        from goodleads import area, maps
         pace = niche.get("pace") or {}
         block, rest = int(pace.get("block", 12)), float(pace.get("rest_minutes", 20))
         total = 0
@@ -177,27 +177,27 @@ def main(argv=None):
 
     conn = db.connect(paths.db)
     if a.cmd == "find":
-        from leadnote import maps
+        from goodleads import maps
         try:
             maps.find(conn, niche, paths, max_searches=a.max, visible=a.show_browser)
         except KeyboardInterrupt:
             print("\nstopped. Everything so far is saved; run find again to continue.")
     elif a.cmd == "visit":
-        from leadnote import visit
+        from goodleads import visit
         visit.visit_companies(conn, niche, limit=a.limit, again=a.again, use_browser=not a.no_browser)
     elif a.cmd == "qualify-prep":
-        from leadnote import qualify
+        from goodleads import qualify
         s = qualify.prepare(conn, paths, niche, a.stage, a.batch, a.limit, again=a.again)
         print(json.dumps(s, indent=1))
     elif a.cmd == "calibrate-prep":
-        from leadnote import calibrate
+        from goodleads import calibrate
         ids = [int(x) for x in a.recheck.replace(" ", "").split(",") if x]
         print(json.dumps(calibrate.prepare(conn, paths, niche, n=a.n, recheck=ids, fresh=a.fresh), indent=1))
     elif a.cmd == "calibrate-show":
-        from leadnote import calibrate
+        from goodleads import calibrate
         print("\n".join(calibrate.show(conn, paths, a.file)))
     elif a.cmd == "brief-prep":
-        from leadnote import brief
+        from goodleads import brief
         s = brief.prepare(conn, paths, niche, tuple(x.strip() for x in a.fit.split(",")), a.limit, again=a.again)
         print(json.dumps(s, indent=1))
 

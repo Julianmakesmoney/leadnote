@@ -1,4 +1,4 @@
-"""SQLite storage. One file per project (data/leadnote.db). Only what finding, visiting and qualifying need."""
+"""SQLite storage. One file per project (data/goodleads.db). Only what finding, visiting and qualifying need."""
 
 import os
 import sqlite3

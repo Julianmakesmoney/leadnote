@@ -1,4 +1,4 @@
-"""Qualifying in two steps, done by Claude Code (/leadnote-qualify), not by an API key.
+"""Qualifying in two steps, done by Claude Code (/goodleads-qualify), not by an API key.
 
     prepare(stage)    writes compact text batches to data/qualify/<stage>/batch-NNN.txt for the sub-agents
     import_labels()   reads the labels the sub-agents wrote, checks them, stores them
@@ -151,8 +151,8 @@ def prefilter(conn, niche, rows):
     return left, auto
 
 
-HEAD = {"sieve": "LEADNOTE sieve batch. Judge each company line against the criteria.",
-        "deep": "LEADNOTE deep batch. Judge each company block against the criteria and name the criteria ids you used."}
+HEAD = {"sieve": "GOODLEADS sieve batch. Judge each company line against the criteria.",
+        "deep": "GOODLEADS deep batch. Judge each company block against the criteria and name the criteria ids you used."}
 
 
 def _criteria_text(paths, stage="deep"):

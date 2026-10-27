@@ -1,5 +1,5 @@
 """Compact, pre-filtered facts for the AI steps. Most of the cost of qualifying is the text the sub-agents read, so
-LEADNOTE never sends raw site text: it cuts each page into sentences, drops menus and boilerplate that repeats across
+GOODLEADS never sends raw site text: it cuts each page into sentences, drops menus and boilerplate that repeats across
 pages, and keeps the opening of the home and about page plus the sentences that touch the criteria. Every sentence
 kept is a literal piece of the stored page, so evidence quotes can still be checked against the pages.
 """
@@ -7,7 +7,7 @@ kept is a literal piece of the stored page, so evidence quotes can still be chec
 import os
 import re
 
-# Words that point at size, customers, hiring and history, in the languages LEADNOTE reads. Matched as word stems.
+# Words that point at size, customers, hiring and history, in the languages GOODLEADS reads. Matched as word stems.
 GENERIC = """
 team medewerk collega werknemer vakmens specialist employee staff people colleague professional engineer mitarbeiter
 kolleg collaborat employ salari empleado dipendent fte klant client customer kunde clientèle cliente opdrachtgever
@@ -29,7 +29,7 @@ WORD_RX = re.compile(r"[a-zà-ÿ0-9][a-zà-ÿ0-9'’+-]*", re.I)
 
 
 def keywords(niche, criteria_path=None):
-    """Word stems to look for: niche.json 'keywords' (written by /leadnote-setup, in the site language), the search
+    """Word stems to look for: niche.json 'keywords' (written by /goodleads-setup, in the site language), the search
     terms, the longer words of criteria.md, and a fixed list about size, customers, jobs and history."""
     words = []
     for w in (niche.get("keywords") or []) + (niche.get("search_terms") or []) + (niche.get("name_keywords") or []):

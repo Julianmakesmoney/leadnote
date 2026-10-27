@@ -2,8 +2,8 @@
 
 import json
 
-from leadnote import db
-from leadnote.maps import merge_twins, process_cards
+from goodleads import db
+from goodleads.maps import merge_twins, process_cards
 
 AREA = {"query": "Test", "name": "Test", "bbox": [52.0, 52.2, 5.0, 5.3], "polygons": []}
 NICHE = {"country": "nl", "language": "nl", "category_exclude": ["Restaurant"], "name_keywords": [],

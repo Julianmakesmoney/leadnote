@@ -1,7 +1,7 @@
 """Website signals and page parsing (made-up pages)."""
 
-from leadnote.signals import founded, jobs, link_kind, redact, staff_count
-from leadnote.visit import parse_page, pick_subpages
+from goodleads.signals import founded, jobs, link_kind, redact, staff_count
+from goodleads.visit import parse_page, pick_subpages
 
 
 def page(kind, text, **kw):

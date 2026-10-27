@@ -3,16 +3,16 @@ description: Check the criteria on about 10 real companies before qualifying hun
 argument-hint: "[--n 10] [--yes]"
 ---
 
-# LEADNOTE calibrate
+# GOODLEADS calibrate
 
-The qualifier is only as good as `config/criteria.md`. Here the user checks it on about 10 companies LEADNOTE already
+The qualifier is only as good as `config/criteria.md`. Here the user checks it on about 10 companies GOODLEADS already
 visited: the qualifier judges them, the user says per company whether that is right, and every correction becomes a
 concrete rule under *Learned from calibration*. At most 3 rounds. Use the `.venv` Python if there is one. Talk in
 the user's language, short and plain. Do not open the batch files yourself.
 
 ## 1. Check and estimate
 
-1. `config/criteria.md` must exist; if not, say `/leadnote-setup` comes first and stop. Run
+1. `config/criteria.md` must exist; if not, say `/goodleads-setup` comes first and stop. Run
    `python run.py criteria-check`. If it lists problems, fix them in `criteria.md` first (an old-style file: rewrite
    it into the outline of `examples/criteria.md`, keeping every rule, and show the user the new must-haves and
    deal-breakers in a few lines).
@@ -25,11 +25,11 @@ the user's language, short and plain. Do not open the batch files yourself.
 
 ## 2. Judge
 
-Spawn one `leadnote-qualifier` sub-agent (`subagent_type: "leadnote-qualifier"`), foreground, with only:
+Spawn one `goodleads-qualifier` sub-agent (`subagent_type: "goodleads-qualifier"`), foreground, with only:
 
 > Batch: `<file>`
 
-Fallback: `general-purpose` with `model: "sonnet"` and the instructions from `.claude/agents/leadnote-qualifier.md`.
+Fallback: `general-purpose` with `model: "sonnet"` and the instructions from `.claude/agents/goodleads-qualifier.md`.
 Then run `python run.py calibrate-show <labels file>`. It prints one line per company: number, name, site, verdict
 (with the hard rules applied), score and reason. Nothing is stored as a label.
 
@@ -56,10 +56,10 @@ service is web hosting is not a managed service provider: no (D2)." Bad: "Compan
 
 ## 5. Again, or done
 
-- No corrections: say the criteria look right and suggest `/leadnote-qualify`.
+- No corrections: say the criteria look right and suggest `/goodleads-qualify`.
 - Corrections, and fewer than 3 rounds: offer one more round, which re-judges the companies that were wrong plus a
   few new ones: `python run.py calibrate-prep --recheck <ids that were wrong>`. Then steps 2 to 5 again.
-- After round 3, stop; say what changed and suggest `/leadnote-qualify`.
+- After round 3, stop; say what changed and suggest `/goodleads-qualify`.
 - If companies were already qualified before these changes, say so in one line and offer
-  `/leadnote-qualify` with a fresh start (`qualify-prep --stage sieve --again` forgets the old labels; the cost
+  `/goodleads-qualify` with a fresh start (`qualify-prep --stage sieve --again` forgets the old labels; the cost
   question comes first as always).

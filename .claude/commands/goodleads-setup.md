@@ -1,11 +1,11 @@
 ---
-description: Set up LEADNOTE for your niche. Paste one long description, or answer a short interview (one question at a time); writes config/niche.json and config/criteria.md.
+description: Set up GOODLEADS for your niche. Paste one long description, or answer a short interview (one question at a time); writes config/niche.json and config/criteria.md.
 argument-hint: "[optional: paste everything about your offer and ideal customer, or one line]"
 ---
 
-# LEADNOTE setup
+# GOODLEADS setup
 
-You are setting up LEADNOTE for this user. LEADNOTE finds every company of one kind in an area on Google Maps, reads
+You are setting up GOODLEADS for this user. GOODLEADS finds every company of one kind in an area on Google Maps, reads
 their websites, and qualifies them against the user's criteria, so the user can call exactly the companies they
 want. **The criteria are the whole product**: the qualifier only knows what you write down here. Your job: understand
 the user's offer and ideal customer in detail, then write two files. Nothing is searched yet.
@@ -101,7 +101,7 @@ Ask in this order. Keep it as short as the answers allow.
     user hesitates between a small and a big area, write a draft `config/niche.json` and run `python run.py plan`
     for each, so the options show real numbers (searches, hours) instead of guesses.
 11. **Size of the run.** How many companies to qualify at most (`max_qualify`, default 300). Mention that the
-    qualifying uses their Claude plan and that `/leadnote-qualify` shows the cost before it starts.
+    qualifying uses their Claude plan and that `/goodleads-qualify` shows the cost before it starts.
 
 ## Search terms and filters (both paths)
 
@@ -151,7 +151,7 @@ Then propose, in one short message, and ask "OK, or change something?":
 
 `config/criteria.md`, in English, with **exactly these sections in this order** (see `examples/criteria.md` for a
 complete one). Write every item as something a company's website or Maps listing can show. Number the items: the
-qualifier names them, LEADNOTE counts them.
+qualifier names them, GOODLEADS counts them.
 
 ```markdown
 # Criteria: <niche, area>
@@ -190,10 +190,10 @@ Then run `python run.py criteria-check`. Fix every problem it lists before you g
    rough time. It does not touch Google.
 2. Tell the user in 3 short lines: how many searches and roughly how long; that `find` keeps a slow work-rest
    rhythm and can be stopped with Ctrl+C and restarted any time; and the next steps: `python run.py find`, then
-   `python run.py visit`, then **`/leadnote-calibrate`** (10 companies to check the criteria with them), then
-   `/leadnote-qualify`, optionally `/leadnote-brief` for the best fits, and `npm start` to watch.
+   `python run.py visit`, then **`/goodleads-calibrate`** (10 companies to check the criteria with them), then
+   `/goodleads-qualify`, optionally `/goodleads-brief` for the best fits, and `npm start` to watch.
 3. If the database already holds visited companies (`python run.py status` shows "visited" above 0), offer the
    calibration right away instead: "Shall I check the criteria on 10 companies we already have? About 2 minutes,
    about 110k tokens of your plan."
 4. Mention once, plainly: Google's terms do not allow automated reading of Maps; the user runs it at their own
-   responsibility, at a calm pace, and LEADNOTE keeps only business data (no e-mail addresses).
+   responsibility, at a calm pace, and GOODLEADS keeps only business data (no e-mail addresses).

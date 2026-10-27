@@ -15,7 +15,7 @@ import requests
 
 KM_PER_DEG_LAT = 111.32
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
-USER_AGENT = "leadnote/1.0 (open-source prospect finder; https://github.com/)"
+USER_AGENT = "goodleads/1.0 (open-source prospect finder; https://github.com/)"
 _last_call = [0.0]
 
 

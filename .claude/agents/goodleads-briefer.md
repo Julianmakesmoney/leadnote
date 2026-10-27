@@ -1,6 +1,6 @@
 ---
-name: leadnote-briefer
-description: LEADNOTE deep briefing. Researches a few best-fit companies and writes a cold-call briefing for each. Used by /leadnote-brief.
+name: goodleads-briefer
+description: GOODLEADS deep briefing. Researches a few best-fit companies and writes a cold-call briefing for each. Used by /goodleads-brief.
 tools: Read, Write, WebFetch, WebSearch
 model: sonnet
 ---

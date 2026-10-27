@@ -1,4 +1,4 @@
-"""Read a few of the user's best clients' websites during /leadnote-setup, so the criteria can describe what they
+"""Read a few of the user's best clients' websites during /goodleads-setup, so the criteria can describe what they
 have in common ("lookalikes"). Nothing is stored in the database; it prints a short, literal summary per site."""
 
 from .compact import GENERIC, clip, digest

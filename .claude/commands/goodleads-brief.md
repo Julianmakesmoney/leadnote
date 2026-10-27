@@ -3,9 +3,9 @@ description: Write a cold-call briefing for each best-fit prospect (fit = yes). 
 argument-hint: "[--limit N] [--include-partly] [--yes]"
 ---
 
-# LEADNOTE brief
+# GOODLEADS brief
 
-For the companies `/leadnote-qualify` marked **fit = yes**, a sub-agent does a short deep research and writes a
+For the companies `/goodleads-qualify` marked **fit = yes**, a sub-agent does a short deep research and writes a
 cold-call briefing: who they are and why now, 3 talking points with evidence, the opener, 2 likely objections with
 answers, and what to ask. "Partly" fits keep their short qualification, unless the user passes `--include-partly`.
 Use the `.venv` Python if there is one. Talk in the user's language. Do not open the batch files yourself.
@@ -15,7 +15,7 @@ Use the `.venv` Python if there is one. Talk in the user's language. Do not open
 1. Run `python run.py brief-prep` (add `--fit yes,partly` for `--include-partly`, `--limit N` if given). It writes
    batches of up to 4 companies and prints JSON: `companies`, `waiting`, `cap` (`max_brief` in `niche.json`,
    default 25), `batches`, `est_tokens`, `est_minutes_parallel3`, `files`. With 0 companies: say
-   `/leadnote-qualify` comes first (or that every "yes" already has a briefing) and stop.
+   `/goodleads-qualify` comes first (or that every "yes" already has a briefing) and stop.
 2. Tell the user in at most four lines: how many briefings, how many more are waiting beyond the cap, the estimated
    tokens (rounded to 10k) and minutes, and that this uses their Claude plan and does a little web research per
    company (one news search, at most one extra page of their own site). **Wait for a clear OK**, unless the
@@ -23,13 +23,13 @@ Use the `.venv` Python if there is one. Talk in the user's language. Do not open
 
 ## 2. Write the briefings
 
-For each batch file, spawn a `leadnote-briefer` sub-agent (`subagent_type: "leadnote-briefer"`), up to 3 at a time in
+For each batch file, spawn a `goodleads-briefer` sub-agent (`subagent_type: "goodleads-briefer"`), up to 3 at a time in
 one message, foreground, with only:
 
 > Batch: `<batch file>`
 
 Fallback when that type is not available: `general-purpose` with `model: "sonnet"` and the instructions from
-`.claude/agents/leadnote-briefer.md`.
+`.claude/agents/goodleads-briefer.md`.
 
 Then `python run.py import-labels <the .briefs.json files>`. It stores each briefing, writes
 `data/briefings/<id>-<name>.md`, and notes evidence it could not find on the stored pages (fine when the briefer

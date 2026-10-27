@@ -3,7 +3,7 @@
 import json
 import os
 
-from leadnote import calibrate, config, criteria, db, qualify, report
+from goodleads import calibrate, config, criteria, db, qualify, report
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXAMPLE = os.path.join(ROOT, "examples", "criteria.md")
@@ -186,7 +186,7 @@ def test_calibration_pick_mix_and_rounds(tmp_path):
 
 
 def test_lookalike_reads_a_site_without_storing():
-    from leadnote import lookalike
+    from goodleads import lookalike
     html = ("<html><head><title>Voorbeeld IT</title></head><body><nav><a href='/contact'>Contact</a></nav>"
             "<h1>Uw IT, ontzorgd</h1><p>Wij beheren de IT van 40 mkb-bedrijven met onze eigen servicedesk. "
             "Ons team van 14 collega's werkt sinds 2009 vanuit Utrecht voor zorg en onderwijs.</p></body></html>")

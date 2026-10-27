@@ -1,9 +1,9 @@
 ---
-description: Qualify the companies LEADNOTE found against config/criteria.md. Shows the count and cost first; then a quick sieve and a deep check, with evidence and an opening line per company.
+description: Qualify the companies GOODLEADS found against config/criteria.md. Shows the count and cost first; then a quick sieve and a deep check, with evidence and an opening line per company.
 argument-hint: "[--limit N] [--again] [--yes]"
 ---
 
-# LEADNOTE qualify
+# GOODLEADS qualify
 
 You qualify the companies that `python run.py find` and `python run.py visit` collected. You never search or crawl
 here: `run.py` prepares compact batches, sub-agents judge them, and `run.py import-labels` stores the labels. Use the
@@ -13,12 +13,12 @@ sub-agents read them.
 
 ## 1. Check and estimate (always, before any work)
 
-1. Check that `config/criteria.md` exists (in the folder `LEADNOTE_CONFIG` points to, if set). If not: tell the
-   user to run `/leadnote-setup` first and stop. Run `python run.py criteria-check`; if it lists problems (an
+1. Check that `config/criteria.md` exists (in the folder `GOODLEADS_CONFIG` points to, if set). If not: tell the
+   user to run `/goodleads-setup` first and stop. Run `python run.py criteria-check`; if it lists problems (an
    old-style file without numbered must-haves and deal-breakers), say in one line that hard rules and the ranking
    need the new outline and offer to rewrite it into the outline of `examples/criteria.md`, keeping every rule.
    If no calibration was done yet (*Learned from calibration* says "none yet") and more than 50 companies wait,
-   suggest `/leadnote-calibrate` first in one line; go on if the user wants.
+   suggest `/goodleads-calibrate` first in one line; go on if the user wants.
 2. Run `python run.py qualify-prep --stage sieve` (add `--limit N` if the user gave one, and `--again` if the user
    asked to judge everything again, e.g. after a calibration; it forgets the old labels, so confirm that with the
    user first, even with `--yes`). It labels what needs no
@@ -39,13 +39,13 @@ sub-agents read them.
 
 ## 2. Step 1: the sieve (cheap and fast)
 
-For each sieve batch file, spawn a `leadnote-sieve` sub-agent (Agent tool, `subagent_type: "leadnote-sieve"`), up to
+For each sieve batch file, spawn a `goodleads-sieve` sub-agent (Agent tool, `subagent_type: "goodleads-sieve"`), up to
 4 at a time in one message, foreground, with only this prompt:
 
 > Batch: `<batch file path>`
 
 If that type is not available in this session, use `general-purpose` with `model: "haiku"` and put the
-instructions from `.claude/agents/leadnote-sieve.md` in the prompt.
+instructions from `.claude/agents/goodleads-sieve.md` in the prompt.
 
 Then run `python run.py import-labels <the .labels.json files>`. If a file is missing or broken, run that batch once
 more; if it fails again, tell the user which batch and continue.
@@ -54,9 +54,9 @@ more; if it fails again, tell the user which batch and continue.
 
 1. Run `python run.py qualify-prep --stage deep`. It writes batches of up to 20 for the companies that passed. If
    its estimate is more than 1.5× what you announced, tell the user and ask again (also with `--yes`).
-2. For each deep batch, spawn a `leadnote-qualifier` sub-agent (`subagent_type: "leadnote-qualifier"`), up to 4 at a
+2. For each deep batch, spawn a `goodleads-qualifier` sub-agent (`subagent_type: "goodleads-qualifier"`), up to 4 at a
    time, with the same one-line prompt. Fallback: `general-purpose` with `model: "sonnet"` and the instructions from
-   `.claude/agents/leadnote-qualifier.md`.
+   `.claude/agents/goodleads-qualifier.md`.
 3. Then `python run.py import-labels <files>`. It applies the hard rules: a deal-breaker or a failed must-have
    makes a company `no`, an unclear must-have turns `yes` into `partly`, and the nice-to-haves and buying signals
    it shows give a score of 0-100 that ranks the fits (notes say where a label was changed). A note "evidence

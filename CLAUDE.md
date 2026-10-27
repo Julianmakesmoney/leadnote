@@ -1,6 +1,6 @@
-# LEADNOTE
+# GOODLEADS
 
-This project is LEADNOTE: it finds every company of one kind in an area on Google Maps, reads their websites, and
+This project is GOODLEADS: it finds every company of one kind in an area on Google Maps, reads their websites, and
 qualifies them against the user's criteria, with a quote as evidence and one opening line per company. It only
 finds and qualifies. It does not send e-mail, call, or collect e-mail addresses.
 
@@ -11,24 +11,24 @@ If the user asks you to set it up ("clone … and set it up for me"):
    and `.venv/bin/python -m playwright install chromium` (Windows: `.venv\Scripts\pip`, `.venv\Scripts\python`).
    Python 3.10+ is needed; Node 20+ for the page.
 2. Run the tests: `.venv/bin/pip install pytest`, then `.venv/bin/python -m pytest -q`.
-3. Start `/leadnote-setup` to interview the user and write `config/niche.json` and `config/criteria.md`.
+3. Start `/goodleads-setup` to interview the user and write `config/niche.json` and `config/criteria.md`.
 
 ## The flow
 
-- `/leadnote-setup`: one pasted description (summary, then only what is missing) or the interview: one question at a
+- `/goodleads-setup`: one pasted description (summary, then only what is missing) or the interview: one question at a
   time, examples with every question, in the user's language. Best clients' sites are read with
   `python run.py lookalike URL...`. It writes `config/criteria.md` in the fixed outline of `examples/criteria.md`
   (numbered M/N/D/S/L items); `python run.py criteria-check` checks it.
-- `/leadnote-calibrate`: about 10 visited companies judged, the user corrects, corrections become L-rules
+- `/goodleads-calibrate`: about 10 visited companies judged, the user corrects, corrections become L-rules
   (`python run.py learn`). Stores no labels.
 - `python run.py plan`: preview of the grid and the time. Safe; it does not touch Google.
 - `python run.py find`: the Maps search. It is slow on purpose (a work-rest rhythm against blocks) and can be stopped
   and restarted at any time. For a long run, start it in the background and tell the user how to follow it.
   Never run two `find` processes at once, and never lower the pace settings without the user asking.
 - `python run.py visit`: reads the companies' websites.
-- `/leadnote-qualify`: the two-step qualification. Always show the count and estimated cost and wait for an OK
+- `/goodleads-qualify`: the two-step qualification. Always show the count and estimated cost and wait for an OK
   (`--yes` skips the wait, for headless runs only when the user asks for it).
-- `/leadnote-brief`: cold-call briefings for fit = yes companies (cost first, `max_brief` cap).
+- `/goodleads-brief`: cold-call briefings for fit = yes companies (cost first, `max_brief` cap).
 - `npm start`: the local page on http://localhost:4760 (zero dependencies). It calls `run.py json`.
 - `python run.py status` and `python run.py export` at any time.
 
@@ -36,18 +36,18 @@ If the user asks you to set it up ("clone … and set it up for me"):
 
 | Path | What |
 |---|---|
-| `leadnote/maps.py` | Maps search: grid queue, list reading, splitting full cells, de-duplication, work-rest rhythm |
-| `leadnote/area.py` | Areas from OpenStreetMap Nominatim, the grid, point-in-area |
-| `leadnote/visit.py`, `leadnote/signals.py` | Website visits and the general signals (services, jobs, size, contact) |
-| `leadnote/criteria.py` | The criteria outline: sections, numbered items, weights, what each step reads, hard rules and score |
-| `leadnote/calibrate.py`, `leadnote/lookalike.py` | Calibration rounds; reading best clients' sites during setup |
-| `leadnote/qualify.py` | Compact text batches for the sub-agents, no-AI prefilter, and `import-labels` with quote checking |
-| `leadnote/compact.py` | Picks the sentences the AI reads (menus and boilerplate out, `keywords` in); keeps qualifying cheap |
-| `leadnote/brief.py` | Briefing batches, import, markdown per company |
-| `.claude/commands/` | `/leadnote-setup`, `/leadnote-calibrate`, `/leadnote-qualify`, `/leadnote-brief` |
-| `.claude/agents/` | `leadnote-sieve` (Haiku), `leadnote-qualifier` and `leadnote-briefer` (Sonnet) |
+| `goodleads/maps.py` | Maps search: grid queue, list reading, splitting full cells, de-duplication, work-rest rhythm |
+| `goodleads/area.py` | Areas from OpenStreetMap Nominatim, the grid, point-in-area |
+| `goodleads/visit.py`, `goodleads/signals.py` | Website visits and the general signals (services, jobs, size, contact) |
+| `goodleads/criteria.py` | The criteria outline: sections, numbered items, weights, what each step reads, hard rules and score |
+| `goodleads/calibrate.py`, `goodleads/lookalike.py` | Calibration rounds; reading best clients' sites during setup |
+| `goodleads/qualify.py` | Compact text batches for the sub-agents, no-AI prefilter, and `import-labels` with quote checking |
+| `goodleads/compact.py` | Picks the sentences the AI reads (menus and boilerplate out, `keywords` in); keeps qualifying cheap |
+| `goodleads/brief.py` | Briefing batches, import, markdown per company |
+| `.claude/commands/` | `/goodleads-setup`, `/goodleads-calibrate`, `/goodleads-qualify`, `/goodleads-brief` |
+| `.claude/agents/` | `goodleads-sieve` (Haiku), `goodleads-qualifier` and `goodleads-briefer` (Sonnet) |
 | `config/` | The user's niche (not in git). Examples in `examples/` |
-| `data/` | The database and work files (not in git). `LEADNOTE_DATA` points elsewhere |
+| `data/` | The database and work files (not in git). `GOODLEADS_DATA` points elsewhere |
 
 ## Rules
 

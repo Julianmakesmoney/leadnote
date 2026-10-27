@@ -1,10 +1,10 @@
 """Where things live and what the niche looks like.
 
-config/niche.json   what to search and where (written by /leadnote-setup; example in examples/)
-config/criteria.md  who counts as a good prospect (read by /leadnote-qualify)
+config/niche.json   what to search and where (written by /goodleads-setup; example in examples/)
+config/criteria.md  who counts as a good prospect (read by /goodleads-qualify)
 data/               the database and work files (never committed)
 
-LEADNOTE_CONFIG and LEADNOTE_DATA (or --config / --data) point somewhere else, handy for several projects.
+GOODLEADS_CONFIG and GOODLEADS_DATA (or --config / --data) point somewhere else, handy for several projects.
 """
 
 import json
@@ -27,14 +27,14 @@ DEFAULTS = {
     "pace": {"block": 12, "rest_minutes": 20, "wait_seconds": [4, 8]},
     "visit": {"max_pages": 6, "threads": 6},
     "max_qualify": 300,
-    "max_brief": 25,                 # most cold-call briefings per run of /leadnote-brief (fit = yes only)
+    "max_brief": 25,                 # most cold-call briefings per run of /goodleads-brief (fit = yes only)
 }
 
 
 class Paths:
     def __init__(self, config_dir=None, data_dir=None):
-        self.config = os.path.abspath(config_dir or os.environ.get("LEADNOTE_CONFIG") or os.path.join(ROOT, "config"))
-        self.data = os.path.abspath(data_dir or os.environ.get("LEADNOTE_DATA") or os.path.join(ROOT, "data"))
+        self.config = os.path.abspath(config_dir or os.environ.get("GOODLEADS_CONFIG") or os.path.join(ROOT, "config"))
+        self.data = os.path.abspath(data_dir or os.environ.get("GOODLEADS_DATA") or os.path.join(ROOT, "data"))
 
     @property
     def niche(self):
@@ -46,7 +46,7 @@ class Paths:
 
     @property
     def db(self):
-        return os.path.join(self.data, "leadnote.db")
+        return os.path.join(self.data, "goodleads.db")
 
     @property
     def areas_cache(self):
@@ -63,7 +63,7 @@ class Paths:
 
 def load_niche(paths):
     if not os.path.exists(paths.niche):
-        raise SystemExit(f"No {paths.niche} yet. Run /leadnote-setup in Claude Code, or copy examples/niche.json to "
+        raise SystemExit(f"No {paths.niche} yet. Run /goodleads-setup in Claude Code, or copy examples/niche.json to "
                          "config/niche.json and edit it.")
     with open(paths.niche, encoding="utf-8") as f:
         user = json.load(f)

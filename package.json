@@ -1,8 +1,8 @@
 {
-  "name": "leadnote",
+  "name": "goodleads",
   "version": "0.1.0",
   "private": true,
-  "description": "The Death Note for sales. Every company on the map; a briefing for the ones worth calling. Local page for the prospects LEADNOTE found and qualified.",
+  "description": "The Death Note for sales. Every company on the map; a briefing for the ones worth calling. Local page for the prospects GOODLEADS found and qualified.",
   "type": "module",
   "scripts": {
     "start": "node app/server.mjs"

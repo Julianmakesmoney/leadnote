@@ -1,11 +1,11 @@
-// LEADNOTE page: funnel, filters, table, company card, CSV of what you see.
+// GOODLEADS page: funnel, filters, table, company card, CSV of what you see.
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (n) => (n == null ? "–" : Number(n).toLocaleString("en-US"));
 
 let DATA = { funnel: null, rows: [] };
 const state = { q: "", fit: "yes", area: "", size: "", jobs: false, sort: "fit", dir: 1, open: null };
-try { Object.assign(state, JSON.parse(localStorage.getItem("leadnote.filters") || "{}"), { open: null }); } catch {}
+try { Object.assign(state, JSON.parse(localStorage.getItem("goodleads.filters") || "{}"), { open: null }); } catch {}
 if (!["yes", "fitting", "partly", "no", "unlabeled", "all"].includes(state.fit)) state.fit = "yes";
 
 function sizeOf(r) {
@@ -72,11 +72,11 @@ function renderRows() {
   const empty = $("#empty");
   if (!DATA.rows.length) {
     empty.hidden = false;
-    empty.innerHTML = `Nothing yet. Run <code>python run.py find</code>, then <code>python run.py visit</code>, then <code>/leadnote-qualify</code> in Claude Code.`;
+    empty.innerHTML = `Nothing yet. Run <code>python run.py find</code>, then <code>python run.py visit</code>, then <code>/goodleads-qualify</code> in Claude Code.`;
   } else if (!rs.length) {
     empty.hidden = false;
     empty.innerHTML = ["yes", "fitting"].includes(state.fit) && !DATA.rows.some((r) => r.fit === "yes" || r.fit === "partly")
-      ? `The note is still empty. Run <code>/leadnote-qualify</code> in Claude Code, or pick <b>All</b> above.`
+      ? `The note is still empty. Run <code>/goodleads-qualify</code> in Claude Code, or pick <b>All</b> above.`
       : "No companies match these filters.";
   } else empty.hidden = true;
   $("#rows").innerHTML = rs.slice(0, 2000).map((r) => `
@@ -155,12 +155,12 @@ function exportCsv() {
   const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `leadnote-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `goodleads-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-function save() { try { localStorage.setItem("leadnote.filters", JSON.stringify({ ...state, open: null })); } catch {} }
+function save() { try { localStorage.setItem("goodleads.filters", JSON.stringify({ ...state, open: null })); } catch {} }
 
 async function load() {
   try {

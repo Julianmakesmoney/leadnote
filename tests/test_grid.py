@@ -1,7 +1,7 @@
 """The search grid: cells over an area, splitting, zoom."""
 
-from leadnote import area
-from leadnote.maps import FULL_FROM, should_split
+from goodleads import area
+from goodleads.maps import FULL_FROM, should_split
 
 # A square of about 22 x 22 km around 52.09 N, 5.12 E, with a triangular outline in its lower-left half.
 BOX = {"query": "Test", "name": "Test", "bbox": [52.0, 52.2, 5.0, 5.32], "polygons": []}

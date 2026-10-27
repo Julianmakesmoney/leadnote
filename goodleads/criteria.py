@@ -4,7 +4,7 @@ Sections (## headings, in this order):
     Offer, Price, Ideal customer, Lookalikes from best clients, Must-haves, Nice-to-haves, Deal-breakers,
     Buying signals, Who to ask for, What a good first call looks like, Assumptions, Learned from calibration
 
-Checkable items carry an id, so the qualifier can name them and LEADNOTE can count them:
+Checkable items carry an id, so the qualifier can name them and GOODLEADS can count them:
     - M1: ...                 must-have      (all must hold for fit = yes)
     - D1: ...                 deal-breaker   (one is enough for fit = no)
     - N1 (weight 3): ...      nice-to-have   (weight 1 to 3; decides the order of the fits)

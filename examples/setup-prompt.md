@@ -1,13 +1,13 @@
-# Set up LEADNOTE in one go
+# Set up GOODLEADS in one go
 
-`/leadnote-setup` asks one question at a time. If you would rather hand over everything at once, fill in the
+`/goodleads-setup` asks one question at a time. If you would rather hand over everything at once, fill in the
 template below (any language is fine) and paste it after the command:
 
 ```
-/leadnote-setup <paste the filled-in template here>
+/goodleads-setup <paste the filled-in template here>
 ```
 
-LEADNOTE then shows one short summary ("This is what I understood") and only asks what is missing or contradicts
+GOODLEADS then shows one short summary ("This is what I understood") and only asks what is missing or contradicts
 itself. Don't have it written down? Use the prompt in part 2 to let ChatGPT or Claude write it from your website.
 
 ## 1. The template
@@ -79,4 +79,4 @@ A GOOD FIRST CALL:
 AREA:
 ```
 
-Answer its 3 questions, let it update the template, and paste the result after `/leadnote-setup`.
+Answer its 3 questions, let it update the template, and paste the result after `/goodleads-setup`.

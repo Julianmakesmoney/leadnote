@@ -5,7 +5,7 @@ companies. A list that comes back full (Maps shows no more than ~120) in a busy 
 cells one zoom level deeper, so dense city centres are not cut off. Every search is stored, so a run can stop at any
 moment (Ctrl+C, a crash, a block) and continue where it left off.
 
-Google's terms of service do not allow automated reading of Maps. LEADNOTE keeps a slow work-rest rhythm, reads only
+Google's terms of service do not allow automated reading of Maps. GOODLEADS keeps a slow work-rest rhythm, reads only
 business listings, and never opens review pages or collects e-mail addresses. Use it at your own responsibility.
 """
 

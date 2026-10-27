@@ -1,4 +1,4 @@
-"""Cold-call briefings for the best-fit prospects (/leadnote-brief).
+"""Cold-call briefings for the best-fit prospects (/goodleads-brief).
 
     prepare()        batches of fit=yes companies (not briefed yet) with everything stored about them
     import_briefs()  stores what the briefer wrote and renders one markdown briefing per company
@@ -56,7 +56,7 @@ def prepare(conn, paths, niche, fits=("yes",), limit=None, batch_size=BATCH_SIZE
     for i in range(0, len(rows), batch_size):
         chunk = rows[i:i + batch_size]
         path = os.path.join(folder, f"batch-{i // batch_size + 1:03d}.txt")
-        text = (f"LEADNOTE brief batch. {len(chunk)} companies.\nWrite the briefings to: {path[:-4]}.briefs.json\n\n"
+        text = (f"GOODLEADS brief batch. {len(chunk)} companies.\nWrite the briefings to: {path[:-4]}.briefs.json\n\n"
                 f"## Criteria\n{crit}\n\n## Companies\n\n" + "\n\n".join(brief_block(conn, c, kws) for c in chunk) +
                 "\n")
         chars += len(text)
